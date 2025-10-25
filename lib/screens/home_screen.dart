@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/planner_provider.dart';
 import '../widgets/glass_card.dart';
 import '../utils/template_data.dart';
 import 'calendar_screen.dart';
@@ -27,15 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF5F7FA),
-              Color(0xFFE0E7FF),
-            ],
+            colors: [Color(0xFFF5F7FA), Color(0xFFE0E7FF)],
           ),
         ),
-        child: SafeArea(
-          child: _buildBody(),
-        ),
+        child: SafeArea(child: _buildBody()),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -60,9 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildHeader(),
         _buildSearchBar(),
         _buildCategoryFilter(),
-        Expanded(
-          child: _buildTemplateGrid(),
-        ),
+        Expanded(child: _buildTemplateGrid()),
       ],
     );
   }
@@ -87,10 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 4),
               Text(
                 'Choose your template',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -101,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                 ),
               ],
@@ -126,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
             ),
           ],
@@ -189,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 boxShadow: [
                   if (isSelected)
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withOpacity(0.3),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -212,16 +200,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTemplateGrid() {
-    final templates = TemplateData.getAllTemplates()
-        .where((template) {
-          final matchesSearch = template.name
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase());
-          final matchesCategory = _selectedCategory == 'All' ||
-              template.category == _selectedCategory;
-          return matchesSearch && matchesCategory;
-        })
-        .toList();
+    final templates = TemplateData.getAllTemplates().where((template) {
+      final matchesSearch = template.name.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+      final matchesCategory =
+          _selectedCategory == 'All' || template.category == _selectedCategory;
+      return matchesSearch && matchesCategory;
+    }).toList();
 
     return GridView.builder(
       padding: const EdgeInsets.all(20),
@@ -247,52 +233,57 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: template.colors,
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: template.colors,
+                      ),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
                     ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      template.icon,
-                      size: 48,
-                      color: Colors.white,
+                    child: Center(
+                      child: Icon(template.icon, size: 48, color: Colors.white),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        template.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1F2937),
+                Expanded(
+                  flex: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          template.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1F2937),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        template.description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                        const SizedBox(height: 4),
+                        Flexible(
+                          child: Text(
+                            template.description,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -309,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
           ),
         ],

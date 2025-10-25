@@ -36,10 +36,25 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.entry?.title ?? '');
-    _contentController = TextEditingController(text: widget.entry?.content ?? '');
+    _contentController = TextEditingController(
+      text: widget.entry?.content ?? '',
+    );
     _selectedDate = widget.entry?.date ?? widget.selectedDate ?? DateTime.now();
     _drawingData = widget.entry?.drawingData;
     _images = widget.entry?.images ?? [];
+
+    // Initialize reminder time from existing entry
+    if (widget.entry?.reminderTime != null &&
+        widget.entry!.reminderTime!.isNotEmpty) {
+      final timeParts = widget.entry!.reminderTime!.split(':');
+      if (timeParts.length >= 2) {
+        final hour = int.tryParse(timeParts[0]);
+        final minute = int.tryParse(timeParts[1]);
+        if (hour != null && minute != null) {
+          _reminderTime = TimeOfDay(hour: hour, minute: minute);
+        }
+      }
+    }
   }
 
   @override
@@ -55,15 +70,9 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
       appBar: AppBar(
         title: Text(widget.entry == null ? 'New Entry' : 'Edit Entry'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _saveEntry,
-          ),
+          IconButton(icon: const Icon(Icons.check), onPressed: _saveEntry),
           if (widget.entry != null)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _deleteEntry,
-            ),
+            IconButton(icon: const Icon(Icons.delete), onPressed: _deleteEntry),
         ],
       ),
       body: SingleChildScrollView(
@@ -122,16 +131,11 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
       decoration: InputDecoration(
         labelText: 'Title',
         hintText: 'Enter title',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.white,
       ),
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
     );
   }
 
@@ -142,9 +146,7 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
       decoration: InputDecoration(
         labelText: 'Content',
         hintText: 'Write your thoughts...',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.white,
       ),
@@ -156,26 +158,10 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
       spacing: 12,
       runSpacing: 12,
       children: [
-        _buildToolButton(
-          icon: Icons.brush,
-          label: 'Draw',
-          onTap: _openDrawing,
-        ),
-        _buildToolButton(
-          icon: Icons.image,
-          label: 'Image',
-          onTap: _pickImage,
-        ),
-        _buildToolButton(
-          icon: Icons.notifications,
-          label: 'Reminder',
-          onTap: _setReminder,
-        ),
-        _buildToolButton(
-          icon: Icons.format_bold,
-          label: 'Bold',
-          onTap: () {},
-        ),
+        _buildToolButton(icon: Icons.brush, label: 'Draw', onTap: _openDrawing),
+        _buildToolButton(icon: Icons.image, label: 'Image', onTap: _pickImage),
+        _buildReminderButton(),
+        _buildToolButton(icon: Icons.format_bold, label: 'Bold', onTap: () {}),
         _buildToolButton(
           icon: Icons.format_italic,
           label: 'Italic',
@@ -217,16 +203,73 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
     );
   }
 
+  Widget _buildReminderButton() {
+    final hasReminder = _reminderTime != null;
+    final reminderText = hasReminder
+        ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}'
+        : 'Reminder';
+
+    return InkWell(
+      onTap: _setReminder,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: hasReminder
+              ? const Color(0xFF6366F1).withValues(alpha: 0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasReminder
+                ? const Color(0xFF6366F1)
+                : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              hasReminder ? Icons.notifications_active : Icons.notifications,
+              size: 20,
+              color: const Color(0xFF6366F1),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              reminderText,
+              style: TextStyle(
+                color: hasReminder
+                    ? const Color(0xFF6366F1)
+                    : const Color(0xFF1F2937),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (hasReminder) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _reminderTime = null;
+                  });
+                },
+                child: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Color(0xFF6366F1),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildImagesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Images',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -276,10 +319,7 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
           children: [
             const Text(
               'Drawing',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             TextButton(
               onPressed: () {
@@ -298,9 +338,7 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
             borderRadius: BorderRadius.circular(12),
             color: Colors.grey[200],
           ),
-          child: const Center(
-            child: Icon(Icons.brush, size: 60),
-          ),
+          child: const Center(child: Icon(Icons.brush, size: 60)),
         ),
       ],
     );
@@ -358,21 +396,6 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
         _reminderTime = time;
       });
 
-      final reminderDateTime = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        time.hour,
-        time.minute,
-      );
-
-      await NotificationService.instance.scheduleNotification(
-        id: widget.entry?.id.hashCode ?? DateTime.now().millisecondsSinceEpoch,
-        title: _titleController.text,
-        body: 'Reminder for your entry',
-        scheduledDate: reminderDateTime,
-      );
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Reminder set successfully')),
@@ -383,9 +406,9 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
 
   Future<void> _saveEntry() async {
     if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a title')));
       return;
     }
 
@@ -402,7 +425,9 @@ class _EntryEditorScreenState extends State<EntryEditorScreen> {
       images: _images,
       createdAt: widget.entry?.createdAt ?? now,
       updatedAt: now,
-      reminderTime: _reminderTime?.format(context),
+      reminderTime: _reminderTime != null
+          ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}'
+          : widget.entry?.reminderTime,
     );
 
     if (widget.entry == null) {

@@ -164,38 +164,6 @@ class PlannerTemplateData {
         previewImage: 'assets/previews/meal_elegant.png',
       ),
 
-      // Finance Templates
-      PlannerTemplate(
-        id: 'finance_minimal',
-        name: 'Finance Minimal',
-        description: 'Simple budget tracker',
-        type: TemplateType.finance,
-        design: TemplateDesign.minimal,
-        icon: Icons.attach_money,
-        colors: [const Color(0xFF10B981), const Color(0xFF059669)],
-        previewImage: 'assets/previews/finance_minimal.png',
-      ),
-      PlannerTemplate(
-        id: 'finance_colorful',
-        name: 'Finance Colorful',
-        description: 'Colorful expense tracker',
-        type: TemplateType.finance,
-        design: TemplateDesign.colorful,
-        icon: Icons.attach_money,
-        colors: [const Color(0xFF0EA5E9), const Color(0xFF38BDF8)],
-        previewImage: 'assets/previews/finance_colorful.png',
-      ),
-      PlannerTemplate(
-        id: 'finance_elegant',
-        name: 'Finance Elegant',
-        description: 'Professional finance tracker',
-        type: TemplateType.finance,
-        design: TemplateDesign.elegant,
-        icon: Icons.attach_money,
-        colors: [const Color(0xFF064E3B), const Color(0xFF065F46)],
-        previewImage: 'assets/previews/finance_elegant.png',
-      ),
-
       // Mood Templates
       PlannerTemplate(
         id: 'mood_minimal',
@@ -770,72 +738,6 @@ class TemplateData {
                 label: 'Workout Notes',
                 type: FieldType.multilineText,
                 placeholder: 'How did the workout feel? Any achievements?',
-              ),
-            ],
-          ),
-        ],
-      ),
-
-      // Finance Tracker Template
-      TemplateModel(
-        id: 'finance_tracker',
-        name: 'Finance Tracker',
-        description: 'Track income, expenses and budget',
-        category: 'Finance',
-        icon: Icons.attach_money,
-        colors: [const Color(0xFF10B981), const Color(0xFF059669)],
-        sections: [
-          TemplateSection(
-            id: 'transaction_info',
-            title: 'Transaction Information',
-            icon: Icons.receipt,
-            fields: [
-              TemplateField(
-                id: 'transaction_date',
-                label: 'Date',
-                type: FieldType.dateTime,
-                required: true,
-              ),
-              TemplateField(
-                id: 'transaction_type',
-                label: 'Transaction Type',
-                type: FieldType.dropdown,
-                options: ['Income', 'Expense'],
-                required: true,
-              ),
-              TemplateField(
-                id: 'amount',
-                label: 'Amount',
-                type: FieldType.number,
-                placeholder: '0.00',
-                required: true,
-              ),
-            ],
-          ),
-          TemplateSection(
-            id: 'categorization',
-            title: 'Category & Details',
-            icon: Icons.category,
-            fields: [
-              TemplateField(
-                id: 'expense_category',
-                label: 'Category',
-                type: FieldType.dropdown,
-                options: [
-                  'Food & Dining',
-                  'Transportation',
-                  'Shopping',
-                  'Entertainment',
-                  'Bills & Utilities',
-                  'Healthcare',
-                  'Other',
-                ],
-              ),
-              TemplateField(
-                id: 'description',
-                label: 'Description',
-                type: FieldType.text,
-                placeholder: 'What was this transaction for?',
               ),
             ],
           ),

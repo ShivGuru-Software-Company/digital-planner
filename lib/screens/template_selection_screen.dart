@@ -7,7 +7,6 @@ import 'templates/weekly_template_screen.dart';
 import 'templates/monthly_template_screen.dart';
 import 'templates/yearly_template_screen.dart';
 import 'templates/meal_template_screen.dart';
-import 'templates/finance_template_screen.dart';
 import 'templates/mood_template_screen.dart';
 
 class TemplateSelectionScreen extends StatefulWidget {
@@ -19,8 +18,7 @@ class TemplateSelectionScreen extends StatefulWidget {
 }
 
 class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
-  TemplateType? _selectedType;
-  TemplateDesign? _selectedDesign;
+  String? _selectedFilter;
   String _searchQuery = '';
 
   @override
@@ -123,76 +121,38 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   }
 
   Widget _buildFilters() {
+    // Combine all filter options in one row
+    final allFilters = [
+      'All',
+      'Daily',
+      'Weekly',
+      'Monthly',
+      'Yearly',
+      'Meal',
+      'Mood',
+      'Minimal',
+      'Colorful',
+      'Elegant',
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Template Type Filter
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: TemplateType.values.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildFilterChip('All', _selectedType == null, () {
-                    setState(() {
-                      _selectedType = null;
-                    });
-                  });
-                }
+      child: SizedBox(
+        height: 50,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: allFilters.length,
+          itemBuilder: (context, index) {
+            final filter = allFilters[index];
+            final isSelected = _selectedFilter == filter;
 
-                final type = TemplateType.values[index - 1];
-                final isSelected = _selectedType == type;
-
-                return _buildFilterChip(
-                  _getTypeDisplayName(type),
-                  isSelected,
-                  () {
-                    setState(() {
-                      _selectedType = isSelected ? null : type;
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Design Filter
-          SizedBox(
-            height: 40,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: TemplateDesign.values.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildDesignChip(
-                    'All Designs',
-                    _selectedDesign == null,
-                    () {
-                      setState(() {
-                        _selectedDesign = null;
-                      });
-                    },
-                  );
-                }
-
-                final design = TemplateDesign.values[index - 1];
-                final isSelected = _selectedDesign == design;
-
-                return _buildDesignChip(
-                  _getDesignDisplayName(design),
-                  isSelected,
-                  () {
-                    setState(() {
-                      _selectedDesign = isSelected ? null : design;
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+            return _buildFilterChip(filter, isSelected, () {
+              setState(() {
+                _selectedFilter = isSelected ? null : filter;
+              });
+            });
+          },
+        ),
       ),
     );
   }
@@ -225,35 +185,6 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           style: TextStyle(
             color: isSelected ? Colors.white : const Color(0xFF6B7280),
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDesignChip(String label, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? const Color(0xFF6366F1) : Colors.grey[300]!,
-          ),
-          color: isSelected
-              ? const Color(0xFF6366F1).withValues(alpha: 0.1)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected
-                ? const Color(0xFF6366F1)
-                : const Color(0xFF6B7280),
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
           ),
         ),
       ),
@@ -375,14 +306,59 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   List<PlannerTemplate> _getFilteredTemplates() {
     var templates = PlannerTemplateData.getAllTemplates();
 
-    // Filter by type
-    if (_selectedType != null) {
-      templates = templates.where((t) => t.type == _selectedType).toList();
-    }
+    // Remove finance templates
+    templates = templates.where((t) => t.type != TemplateType.finance).toList();
 
-    // Filter by design
-    if (_selectedDesign != null) {
-      templates = templates.where((t) => t.design == _selectedDesign).toList();
+    // Filter by selected filter
+    if (_selectedFilter != null && _selectedFilter != 'All') {
+      // Check if it's a template type filter
+      switch (_selectedFilter) {
+        case 'Daily':
+          templates = templates
+              .where((t) => t.type == TemplateType.daily)
+              .toList();
+          break;
+        case 'Weekly':
+          templates = templates
+              .where((t) => t.type == TemplateType.weekly)
+              .toList();
+          break;
+        case 'Monthly':
+          templates = templates
+              .where((t) => t.type == TemplateType.monthly)
+              .toList();
+          break;
+        case 'Yearly':
+          templates = templates
+              .where((t) => t.type == TemplateType.yearly)
+              .toList();
+          break;
+        case 'Meal':
+          templates = templates
+              .where((t) => t.type == TemplateType.meal)
+              .toList();
+          break;
+        case 'Mood':
+          templates = templates
+              .where((t) => t.type == TemplateType.mood)
+              .toList();
+          break;
+        case 'Minimal':
+          templates = templates
+              .where((t) => t.design == TemplateDesign.minimal)
+              .toList();
+          break;
+        case 'Colorful':
+          templates = templates
+              .where((t) => t.design == TemplateDesign.colorful)
+              .toList();
+          break;
+        case 'Elegant':
+          templates = templates
+              .where((t) => t.design == TemplateDesign.elegant)
+              .toList();
+          break;
+      }
     }
 
     // Filter by search query
@@ -399,25 +375,6 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     }
 
     return templates;
-  }
-
-  String _getTypeDisplayName(TemplateType type) {
-    switch (type) {
-      case TemplateType.daily:
-        return 'Daily';
-      case TemplateType.weekly:
-        return 'Weekly';
-      case TemplateType.monthly:
-        return 'Monthly';
-      case TemplateType.yearly:
-        return 'Yearly';
-      case TemplateType.meal:
-        return 'Meal';
-      case TemplateType.finance:
-        return 'Finance';
-      case TemplateType.mood:
-        return 'Mood';
-    }
   }
 
   String _getDesignDisplayName(TemplateDesign design) {
@@ -451,8 +408,13 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         screen = MealTemplateScreen(template: template);
         break;
       case TemplateType.finance:
-        screen = FinanceTemplateScreen(template: template);
-        break;
+        // Finance templates are removed
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Finance templates are no longer available'),
+          ),
+        );
+        return;
       case TemplateType.mood:
         screen = MoodTemplateScreen(template: template);
         break;

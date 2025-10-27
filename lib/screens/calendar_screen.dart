@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/planner_provider.dart';
 import '../models/entry_model.dart';
+import '../utils/template_data.dart';
 import '../widgets/glass_card.dart';
 import 'entry_editor_screen.dart';
+import 'interactive_template_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -25,18 +27,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFF5F7FA),
-            Color(0xFFE0E7FF),
-          ],
+          colors: [Color(0xFFF5F7FA), Color(0xFFE0E7FF)],
         ),
       ),
       child: Column(
         children: [
           _buildCalendar(),
-          Expanded(
-            child: _buildEntriesList(),
-          ),
+          Expanded(child: _buildEntriesList()),
         ],
       ),
     );
@@ -57,8 +54,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
               _selectedDay = selectedDay;
               _focusedDay = focusedDay;
             });
-            Provider.of<PlannerProvider>(context, listen: false)
-                .setSelectedDate(selectedDay);
+            Provider.of<PlannerProvider>(
+              context,
+              listen: false,
+            ).setSelectedDate(selectedDay);
           },
           onFormatChanged: (format) {
             setState(() {
@@ -67,7 +66,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           },
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.5),
+              color: const Color(0xFF6366F1).withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             selectedDecoration: const BoxDecoration(
@@ -85,7 +84,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
             formatButtonShowsNext: false,
           ),
           eventLoader: (day) {
-            final provider = Provider.of<PlannerProvider>(context, listen: false);
+            final provider = Provider.of<PlannerProvider>(
+              context,
+              listen: false,
+            );
             return provider.getEntriesForDate(day);
           },
         ),
@@ -111,10 +113,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'No entries for this day',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
@@ -153,10 +152,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _buildEntryCard(BuildContext context, EntryModel entry) {
     return GestureDetector(
       onTap: () {
+        // Find the template for this entry
+        final template = TemplateData.getAllTemplates().firstWhere(
+          (t) => t.id == entry.templateId,
+          orElse: () => TemplateData.getAllTemplates()
+              .first, // Fallback to first template
+        );
+
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => EntryEditorScreen(entry: entry),
+            builder: (_) => InteractiveTemplateScreen(
+              template: template,
+              existingEntry: entry,
+            ),
           ),
         );
       },
@@ -186,7 +195,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEC4899).withOpacity(0.1),
+                        color: const Color(0xFFEC4899).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Row(
@@ -215,10 +224,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 entry.content,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               if (entry.images.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -249,13 +255,109 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _createNewEntry(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EntryEditorScreen(
-          selectedDate: _selectedDay,
+    _showTemplateSelectionDialog(context);
+  }
+
+  void _showTemplateSelectionDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Choose Template',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: _buildTemplateSelectionGrid(context)),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTemplateSelectionGrid(BuildContext context) {
+    final templates = TemplateData.getAllTemplates();
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: templates.length,
+      itemBuilder: (context, index) {
+        final template = templates[index];
+        return GestureDetector(
+          onTap: () {
+            Navigator.pop(context); // Close the dialog
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => InteractiveTemplateScreen(template: template),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: template.colors,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(template.icon, size: 40, color: Colors.white),
+                  const SizedBox(height: 8),
+                  Text(
+                    template.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

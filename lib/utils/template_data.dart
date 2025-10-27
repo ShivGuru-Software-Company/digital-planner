@@ -1,10 +1,269 @@
 import 'package:flutter/material.dart';
 import '../models/template_model.dart';
 
+class PlannerTemplateData {
+  static List<PlannerTemplate> getAllTemplates() {
+    return [
+      // Daily Templates
+      PlannerTemplate(
+        id: 'daily_minimal',
+        name: 'Daily Minimal',
+        description: 'Clean and simple daily planner',
+        type: TemplateType.daily,
+        design: TemplateDesign.minimal,
+        icon: Icons.today,
+        colors: [const Color(0xFF6366F1), const Color(0xFF8B5CF6)],
+        previewImage: 'assets/previews/daily_minimal.png',
+      ),
+      PlannerTemplate(
+        id: 'daily_colorful',
+        name: 'Daily Colorful',
+        description: 'Vibrant and energetic daily planner',
+        type: TemplateType.daily,
+        design: TemplateDesign.colorful,
+        icon: Icons.today,
+        colors: [const Color(0xFFFF6B6B), const Color(0xFFFFE66D)],
+        previewImage: 'assets/previews/daily_colorful.png',
+      ),
+      PlannerTemplate(
+        id: 'daily_elegant',
+        name: 'Daily Elegant',
+        description: 'Sophisticated daily planner design',
+        type: TemplateType.daily,
+        design: TemplateDesign.elegant,
+        icon: Icons.today,
+        colors: [const Color(0xFF2D3748), const Color(0xFF4A5568)],
+        previewImage: 'assets/previews/daily_elegant.png',
+      ),
+
+      // Weekly Templates
+      PlannerTemplate(
+        id: 'weekly_minimal',
+        name: 'Weekly Minimal',
+        description: 'Simple weekly overview',
+        type: TemplateType.weekly,
+        design: TemplateDesign.minimal,
+        icon: Icons.view_week,
+        colors: [const Color(0xFF10B981), const Color(0xFF34D399)],
+        previewImage: 'assets/previews/weekly_minimal.png',
+      ),
+      PlannerTemplate(
+        id: 'weekly_colorful',
+        name: 'Weekly Colorful',
+        description: 'Bright weekly planner',
+        type: TemplateType.weekly,
+        design: TemplateDesign.colorful,
+        icon: Icons.view_week,
+        colors: [const Color(0xFF8B5CF6), const Color(0xFFEC4899)],
+        previewImage: 'assets/previews/weekly_colorful.png',
+      ),
+      PlannerTemplate(
+        id: 'weekly_elegant',
+        name: 'Weekly Elegant',
+        description: 'Professional weekly layout',
+        type: TemplateType.weekly,
+        design: TemplateDesign.elegant,
+        icon: Icons.view_week,
+        colors: [const Color(0xFF1F2937), const Color(0xFF374151)],
+        previewImage: 'assets/previews/weekly_elegant.png',
+      ),
+
+      // Monthly Templates
+      PlannerTemplate(
+        id: 'monthly_minimal',
+        name: 'Monthly Minimal',
+        description: 'Clean monthly calendar view',
+        type: TemplateType.monthly,
+        design: TemplateDesign.minimal,
+        icon: Icons.calendar_month,
+        colors: [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
+        previewImage: 'assets/previews/monthly_minimal.png',
+      ),
+      PlannerTemplate(
+        id: 'monthly_colorful',
+        name: 'Monthly Colorful',
+        description: 'Vibrant monthly planner',
+        type: TemplateType.monthly,
+        design: TemplateDesign.colorful,
+        icon: Icons.calendar_month,
+        colors: [const Color(0xFFF59E0B), const Color(0xFFFBBF24)],
+        previewImage: 'assets/previews/monthly_colorful.png',
+      ),
+      PlannerTemplate(
+        id: 'monthly_elegant',
+        name: 'Monthly Elegant',
+        description: 'Sophisticated monthly view',
+        type: TemplateType.monthly,
+        design: TemplateDesign.elegant,
+        icon: Icons.calendar_month,
+        colors: [const Color(0xFF059669), const Color(0xFF10B981)],
+        previewImage: 'assets/previews/monthly_elegant.png',
+      ),
+
+      // Yearly Templates
+      PlannerTemplate(
+        id: 'yearly_minimal',
+        name: 'Yearly Minimal',
+        description: 'Simple year overview',
+        type: TemplateType.yearly,
+        design: TemplateDesign.minimal,
+        icon: Icons.calendar_today,
+        colors: [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)],
+        previewImage: 'assets/previews/yearly_minimal.png',
+      ),
+      PlannerTemplate(
+        id: 'yearly_colorful',
+        name: 'Yearly Colorful',
+        description: 'Colorful year planner',
+        type: TemplateType.yearly,
+        design: TemplateDesign.colorful,
+        icon: Icons.calendar_today,
+        colors: [const Color(0xFFDC2626), const Color(0xFFEF4444)],
+        previewImage: 'assets/previews/yearly_colorful.png',
+      ),
+      PlannerTemplate(
+        id: 'yearly_elegant',
+        name: 'Yearly Elegant',
+        description: 'Professional year layout',
+        type: TemplateType.yearly,
+        design: TemplateDesign.elegant,
+        icon: Icons.calendar_today,
+        colors: [const Color(0xFF0F172A), const Color(0xFF1E293B)],
+        previewImage: 'assets/previews/yearly_elegant.png',
+      ),
+
+      // Meal Templates
+      PlannerTemplate(
+        id: 'meal_minimal',
+        name: 'Meal Minimal',
+        description: 'Simple meal planning',
+        type: TemplateType.meal,
+        design: TemplateDesign.minimal,
+        icon: Icons.restaurant,
+        colors: [const Color(0xFFF97316), const Color(0xFFFB923C)],
+        previewImage: 'assets/previews/meal_minimal.png',
+      ),
+      PlannerTemplate(
+        id: 'meal_colorful',
+        name: 'Meal Colorful',
+        description: 'Vibrant meal tracker',
+        type: TemplateType.meal,
+        design: TemplateDesign.colorful,
+        icon: Icons.restaurant,
+        colors: [const Color(0xFF06B6D4), const Color(0xFF22D3EE)],
+        previewImage: 'assets/previews/meal_colorful.png',
+      ),
+      PlannerTemplate(
+        id: 'meal_elegant',
+        name: 'Meal Elegant',
+        description: 'Sophisticated meal planner',
+        type: TemplateType.meal,
+        design: TemplateDesign.elegant,
+        icon: Icons.restaurant,
+        colors: [const Color(0xFF7C2D12), const Color(0xFF9A3412)],
+        previewImage: 'assets/previews/meal_elegant.png',
+      ),
+
+      // Finance Templates
+      PlannerTemplate(
+        id: 'finance_minimal',
+        name: 'Finance Minimal',
+        description: 'Simple budget tracker',
+        type: TemplateType.finance,
+        design: TemplateDesign.minimal,
+        icon: Icons.attach_money,
+        colors: [const Color(0xFF10B981), const Color(0xFF059669)],
+        previewImage: 'assets/previews/finance_minimal.png',
+      ),
+      PlannerTemplate(
+        id: 'finance_colorful',
+        name: 'Finance Colorful',
+        description: 'Colorful expense tracker',
+        type: TemplateType.finance,
+        design: TemplateDesign.colorful,
+        icon: Icons.attach_money,
+        colors: [const Color(0xFF0EA5E9), const Color(0xFF38BDF8)],
+        previewImage: 'assets/previews/finance_colorful.png',
+      ),
+      PlannerTemplate(
+        id: 'finance_elegant',
+        name: 'Finance Elegant',
+        description: 'Professional finance tracker',
+        type: TemplateType.finance,
+        design: TemplateDesign.elegant,
+        icon: Icons.attach_money,
+        colors: [const Color(0xFF064E3B), const Color(0xFF065F46)],
+        previewImage: 'assets/previews/finance_elegant.png',
+      ),
+
+      // Mood Templates
+      PlannerTemplate(
+        id: 'mood_minimal',
+        name: 'Mood Minimal',
+        description: 'Simple mood tracker',
+        type: TemplateType.mood,
+        design: TemplateDesign.minimal,
+        icon: Icons.sentiment_satisfied_alt,
+        colors: [const Color(0xFFEC4899), const Color(0xFFF472B6)],
+        previewImage: 'assets/previews/mood_minimal.png',
+      ),
+      PlannerTemplate(
+        id: 'mood_colorful',
+        name: 'Mood Colorful',
+        description: 'Vibrant mood journal',
+        type: TemplateType.mood,
+        design: TemplateDesign.colorful,
+        icon: Icons.sentiment_satisfied_alt,
+        colors: [const Color(0xFFEF4444), const Color(0xFFF87171)],
+        previewImage: 'assets/previews/mood_colorful.png',
+      ),
+      PlannerTemplate(
+        id: 'mood_elegant',
+        name: 'Mood Elegant',
+        description: 'Sophisticated mood tracker',
+        type: TemplateType.mood,
+        design: TemplateDesign.elegant,
+        icon: Icons.sentiment_satisfied_alt,
+        colors: [const Color(0xFF7C2D12), const Color(0xFF92400E)],
+        previewImage: 'assets/previews/mood_elegant.png',
+      ),
+    ];
+  }
+
+  static List<PlannerTemplate> getTemplatesByType(TemplateType type) {
+    return getAllTemplates()
+        .where((template) => template.type == type)
+        .toList();
+  }
+
+  static List<PlannerTemplate> getTemplatesByDesign(TemplateDesign design) {
+    return getAllTemplates()
+        .where((template) => template.design == design)
+        .toList();
+  }
+
+  static PlannerTemplate? getTemplateById(String id) {
+    try {
+      return getAllTemplates().firstWhere((template) => template.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static List<TemplateType> getAllTypes() {
+    return TemplateType.values;
+  }
+
+  static List<TemplateDesign> getAllDesigns() {
+    return TemplateDesign.values;
+  }
+}
+
+// Legacy class for backward compatibility
 class TemplateData {
   static List<TemplateModel> getAllTemplates() {
     return [
-      // Daily Planner Template
+      // Convert new templates to old format for backward compatibility
       TemplateModel(
         id: 'daily_planner',
         name: 'Daily Planner',

@@ -3,10 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/planner_provider.dart';
 import '../models/entry_model.dart';
-import '../utils/template_data.dart';
+import '../models/template_model.dart';
+import '../utils/template_data.dart' as template_utils;
 import '../widgets/glass_card.dart';
 import 'entry_editor_screen.dart';
-import 'interactive_template_screen.dart';
+import 'templates/daily_template_screen.dart';
+import 'templates/weekly_template_screen.dart';
+import 'templates/monthly_template_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -152,21 +155,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _buildEntryCard(BuildContext context, EntryModel entry) {
     return GestureDetector(
       onTap: () {
-        // Find the template for this entry
-        final template = TemplateData.getAllTemplates().firstWhere(
-          (t) => t.id == entry.templateId,
-          orElse: () => TemplateData.getAllTemplates()
-              .first, // Fallback to first template
-        );
-
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => InteractiveTemplateScreen(
-              template: template,
-              existingEntry: entry,
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => EntryEditorScreen(entry: entry)),
         );
       },
       child: GlassCard(
@@ -295,7 +286,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildTemplateSelectionGrid(BuildContext context) {
-    final templates = TemplateData.getAllTemplates();
+    final templates = template_utils.PlannerTemplateData.getAllTemplates();
 
     return GridView.builder(
       padding: const EdgeInsets.all(20),
@@ -311,12 +302,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         return GestureDetector(
           onTap: () {
             Navigator.pop(context); // Close the dialog
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => InteractiveTemplateScreen(template: template),
-              ),
-            );
+            _openTemplate(template);
           },
           child: Container(
             decoration: BoxDecoration(
@@ -359,5 +345,43 @@ class _CalendarScreenState extends State<CalendarScreen> {
         );
       },
     );
+  }
+
+  void _openTemplate(PlannerTemplate template) {
+    Widget screen;
+
+    switch (template.type) {
+      case TemplateType.daily:
+        screen = DailyTemplateScreen(template: template);
+        break;
+      case TemplateType.weekly:
+        screen = WeeklyTemplateScreen(template: template);
+        break;
+      case TemplateType.monthly:
+        screen = MonthlyTemplateScreen(template: template);
+        break;
+      case TemplateType.yearly:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Yearly template - Coming Soon!')),
+        );
+        return;
+      case TemplateType.meal:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Meal template - Coming Soon!')),
+        );
+        return;
+      case TemplateType.finance:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Finance template - Coming Soon!')),
+        );
+        return;
+      case TemplateType.mood:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mood template - Coming Soon!')),
+        );
+        return;
+    }
+
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 }

@@ -1,5 +1,68 @@
 import 'package:flutter/material.dart';
 
+enum TemplateType { daily, weekly, monthly, yearly, meal, finance, mood }
+
+enum TemplateDesign { minimal, colorful, elegant }
+
+class PlannerTemplate {
+  final String id;
+  final String name;
+  final String description;
+  final TemplateType type;
+  final TemplateDesign design;
+  final IconData icon;
+  final List<Color> colors;
+  final String previewImage;
+
+  PlannerTemplate({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.type,
+    required this.design,
+    required this.icon,
+    required this.colors,
+    required this.previewImage,
+  });
+}
+
+class TemplateData {
+  final String id;
+  final DateTime date;
+  final Map<String, dynamic> data;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  TemplateData({
+    required this.id,
+    required this.date,
+    required this.data,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'date': date.toIso8601String(),
+      'data': data,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory TemplateData.fromMap(Map<String, dynamic> map) {
+    return TemplateData(
+      id: map['id'],
+      date: DateTime.parse(map['date']),
+      data: Map<String, dynamic>.from(map['data']),
+      createdAt: DateTime.parse(map['createdAt']),
+      updatedAt: DateTime.parse(map['updatedAt']),
+    );
+  }
+}
+
+// Legacy models for backward compatibility
 enum FieldType {
   text,
   multilineText,
@@ -25,10 +88,10 @@ class TemplateField {
   final FieldType type;
   final bool required;
   final String? placeholder;
-  final List<String>? options; // For dropdown, checkbox lists
-  final int? maxValue; // For rating, number fields
+  final List<String>? options;
+  final int? maxValue;
   final int? minValue;
-  final Map<String, dynamic>? config; // Additional field configuration
+  final Map<String, dynamic>? config;
 
   TemplateField({
     required this.id,

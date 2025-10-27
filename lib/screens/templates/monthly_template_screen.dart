@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
+import '../../models/saved_template_model.dart';
+import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 
 class MonthlyTemplateScreen extends StatefulWidget {
@@ -217,106 +219,120 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: List.generate(weeksNeeded, (weekIndex) {
-          return Row(
-            children: List.generate(7, (dayIndex) {
-              final dayNumber = (weekIndex * 7) + dayIndex - firstWeekday + 1;
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate available height per week
+          final availableHeight = constraints.maxHeight;
+          final weekHeight = (availableHeight / weeksNeeded).clamp(50.0, 70.0);
 
-              if (dayNumber <= 0 || dayNumber > daysInMonth) {
-                return Expanded(
-                  child: Container(
-                    height: 80,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!, width: 0.5),
-                      color: Colors.grey[50],
-                    ),
-                  ),
-                );
-              }
+          return Column(
+            children: List.generate(weeksNeeded, (weekIndex) {
+              return SizedBox(
+                height: weekHeight,
+                child: Row(
+                  children: List.generate(7, (dayIndex) {
+                    final dayNumber =
+                        (weekIndex * 7) + dayIndex - firstWeekday + 1;
 
-              final isToday =
-                  DateTime.now().day == dayNumber &&
-                  DateTime.now().month == _selectedMonth.month &&
-                  DateTime.now().year == _selectedMonth.year;
+                    if (dayNumber <= 0 || dayNumber > daysInMonth) {
+                      return Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey[300]!,
+                              width: 0.5,
+                            ),
+                            color: Colors.grey[50],
+                          ),
+                        ),
+                      );
+                    }
 
-              final hasNote = _dayNotes[dayNumber]?.isNotEmpty ?? false;
-              final noteText = _dayNotes[dayNumber] ?? '';
+                    final isToday =
+                        DateTime.now().day == dayNumber &&
+                        DateTime.now().month == _selectedMonth.month &&
+                        DateTime.now().year == _selectedMonth.year;
 
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => _showDayDialog(dayNumber),
-                  child: Container(
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: isToday
-                          ? widget.template.colors.first.withValues(alpha: 0.2)
-                          : Colors.white,
-                      border: Border.all(
-                        color: isToday
-                            ? widget.template.colors.first
-                            : Colors.grey[300]!,
-                        width: isToday ? 2 : 0.5,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(2),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Date number
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
+                    final hasNote = _dayNotes[dayNumber]?.isNotEmpty ?? false;
+                    final noteText = _dayNotes[dayNumber] ?? '';
+
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => _showDayDialog(dayNumber),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isToday
+                                ? widget.template.colors.first.withValues(
+                                    alpha: 0.2,
+                                  )
+                                : Colors.white,
+                            border: Border.all(
                               color: isToday
                                   ? widget.template.colors.first
-                                  : hasNote
-                                  ? widget.template.colors.first.withValues(
-                                      alpha: 0.3,
-                                    )
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                dayNumber.toString(),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: isToday
-                                      ? Colors.white
-                                      : hasNote
-                                      ? widget.template.colors.first
-                                      : Colors.black87,
-                                  fontSize: 10,
-                                ),
-                              ),
+                                  : Colors.grey[300]!,
+                              width: isToday ? 1.5 : 0.5,
                             ),
                           ),
-                          // Note preview
-                          if (hasNote) ...[
-                            const SizedBox(height: 2),
-                            Expanded(
-                              child: Text(
-                                noteText,
-                                style: const TextStyle(
-                                  fontSize: 8,
-                                  color: Colors.black54,
+                          child: Padding(
+                            padding: const EdgeInsets.all(1),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Date number
+                                Container(
+                                  width: 16,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: isToday
+                                        ? widget.template.colors.first
+                                        : hasNote
+                                        ? widget.template.colors.first
+                                              .withValues(alpha: 0.3)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      dayNumber.toString(),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: isToday
+                                            ? Colors.white
+                                            : hasNote
+                                            ? widget.template.colors.first
+                                            : Colors.black87,
+                                        fontSize: 8,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                maxLines: 4,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                // Note preview
+                                if (hasNote && weekHeight > 55) ...[
+                                  const SizedBox(height: 1),
+                                  Expanded(
+                                    child: Text(
+                                      noteText,
+                                      style: const TextStyle(
+                                        fontSize: 6,
+                                        color: Colors.black54,
+                                      ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
-                        ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 ),
               );
             }),
           );
-        }),
+        },
       ),
     );
   }
@@ -451,11 +467,69 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> {
     );
   }
 
-  void _saveTemplate() {
-    // Save the template data (implementation depends on your data storage)
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Monthly template saved successfully!')),
-    );
-    Navigator.pop(context);
+  Future<void> _saveTemplate() async {
+    final data = {
+      'selectedMonth': _selectedMonth.toIso8601String(),
+      'dayNotes': Map.fromEntries(
+        _dayNotes.entries.map((e) => MapEntry(e.key.toString(), e.value)),
+      ),
+    };
+
+    try {
+      final databaseHelper = DatabaseHelper();
+
+      if (widget.existingData != null) {
+        final existingTemplates = await databaseHelper.getAllSavedTemplates();
+        final existingTemplate = existingTemplates.firstWhere(
+          (t) =>
+              t.templateId == widget.template.id &&
+              t.updatedAt.month == _selectedMonth.month &&
+              t.updatedAt.year == _selectedMonth.year,
+          orElse: () => SavedTemplateModel.create(
+            templateId: widget.template.id,
+            templateName:
+                '${widget.template.name} - ${DateFormat('MMMM yyyy').format(_selectedMonth)}',
+            templateType: widget.template.type.name,
+            templateDesign: widget.template.design.name,
+            templateColors: widget.template.colors,
+            templateIcon: widget.template.icon,
+            data: data,
+          ),
+        );
+
+        final updatedTemplate = existingTemplate.copyWith(
+          data: data,
+          updatedAt: DateTime.now(),
+        );
+
+        await databaseHelper.updateSavedTemplate(updatedTemplate);
+      } else {
+        final savedTemplate = SavedTemplateModel.create(
+          templateId: widget.template.id,
+          templateName:
+              '${widget.template.name} - ${DateFormat('MMMM yyyy').format(_selectedMonth)}',
+          templateType: widget.template.type.name,
+          templateDesign: widget.template.design.name,
+          templateColors: widget.template.colors,
+          templateIcon: widget.template.icon,
+          data: data,
+        );
+
+        await databaseHelper.insertSavedTemplate(savedTemplate);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Monthly template saved successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving template: $e')));
+      }
+    }
   }
 }

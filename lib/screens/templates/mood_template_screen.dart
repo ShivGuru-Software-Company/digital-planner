@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
+import '../../models/saved_template_model.dart';
+import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 
 class MoodTemplateScreen extends StatefulWidget {
@@ -768,11 +770,79 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
     );
   }
 
-  void _saveTemplate() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mood data saved successfully!')),
-    );
-    Navigator.pop(context);
+  Future<void> _saveTemplate() async {
+    final data = {
+      'selectedDate': _selectedDate.toIso8601String(),
+      'selectedMood': _selectedMood,
+      'moodIntensity': _moodIntensity,
+      'energyLevel': _energyLevel,
+      'stressLevel': _stressLevel,
+      'sleepQuality': _sleepQuality,
+      'thoughts': _thoughtsController.text,
+      'gratitude': _gratitudeController.text,
+      'goals': _goalsController.text,
+      'reflection': _reflectionController.text,
+      'activities': _selectedActivities,
+      'triggers': _selectedTriggers,
+    };
+
+    try {
+      final databaseHelper = DatabaseHelper();
+
+      if (widget.existingData != null) {
+        final existingTemplates = await databaseHelper.getAllSavedTemplates();
+        final existingTemplate = existingTemplates.firstWhere(
+          (t) =>
+              t.templateId == widget.template.id &&
+              t.updatedAt.day == _selectedDate.day &&
+              t.updatedAt.month == _selectedDate.month &&
+              t.updatedAt.year == _selectedDate.year,
+          orElse: () => SavedTemplateModel.create(
+            templateId: widget.template.id,
+            templateName:
+                '${widget.template.name} - ${DateFormat('MMM dd').format(_selectedDate)}',
+            templateType: widget.template.type.name,
+            templateDesign: widget.template.design.name,
+            templateColors: widget.template.colors,
+            templateIcon: widget.template.icon,
+            data: data,
+          ),
+        );
+
+        final updatedTemplate = existingTemplate.copyWith(
+          data: data,
+          updatedAt: DateTime.now(),
+        );
+
+        await databaseHelper.updateSavedTemplate(updatedTemplate);
+      } else {
+        final savedTemplate = SavedTemplateModel.create(
+          templateId: widget.template.id,
+          templateName:
+              '${widget.template.name} - ${DateFormat('MMM dd').format(_selectedDate)}',
+          templateType: widget.template.type.name,
+          templateDesign: widget.template.design.name,
+          templateColors: widget.template.colors,
+          templateIcon: widget.template.icon,
+          data: data,
+        );
+
+        await databaseHelper.insertSavedTemplate(savedTemplate);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mood data saved successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving mood data: $e')));
+      }
+    }
   }
 }
 

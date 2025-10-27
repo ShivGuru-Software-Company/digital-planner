@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
+import '../../models/saved_template_model.dart';
+import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 
 class YearlyTemplateScreen extends StatefulWidget {
@@ -439,11 +441,66 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
     );
   }
 
-  void _saveTemplate() {
-    // Save the template data (implementation depends on your data storage)
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Yearly template saved successfully!')),
-    );
-    Navigator.pop(context);
+  Future<void> _saveTemplate() async {
+    final data = {
+      'selectedYear': _selectedYear,
+      'monthNotes': Map.fromEntries(
+        _monthNotes.entries.map((e) => MapEntry(e.key.toString(), e.value)),
+      ),
+    };
+
+    try {
+      final databaseHelper = DatabaseHelper();
+
+      if (widget.existingData != null) {
+        final existingTemplates = await databaseHelper.getAllSavedTemplates();
+        final existingTemplate = existingTemplates.firstWhere(
+          (t) =>
+              t.templateId == widget.template.id &&
+              t.updatedAt.year == _selectedYear,
+          orElse: () => SavedTemplateModel.create(
+            templateId: widget.template.id,
+            templateName: '${widget.template.name} - $_selectedYear',
+            templateType: widget.template.type.name,
+            templateDesign: widget.template.design.name,
+            templateColors: widget.template.colors,
+            templateIcon: widget.template.icon,
+            data: data,
+          ),
+        );
+
+        final updatedTemplate = existingTemplate.copyWith(
+          data: data,
+          updatedAt: DateTime.now(),
+        );
+
+        await databaseHelper.updateSavedTemplate(updatedTemplate);
+      } else {
+        final savedTemplate = SavedTemplateModel.create(
+          templateId: widget.template.id,
+          templateName: '${widget.template.name} - $_selectedYear',
+          templateType: widget.template.type.name,
+          templateDesign: widget.template.design.name,
+          templateColors: widget.template.colors,
+          templateIcon: widget.template.icon,
+          data: data,
+        );
+
+        await databaseHelper.insertSavedTemplate(savedTemplate);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Yearly template saved successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving template: $e')));
+      }
+    }
   }
 }

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/language_provider.dart';
 import '../services/notification_service.dart';
 import '../widgets/glass_card.dart';
 import 'about_screen.dart';
@@ -36,117 +33,12 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _buildAppearanceSection(context),
-                const SizedBox(height: 20),
-                _buildLanguageSection(context),
-                const SizedBox(height: 20),
                 _buildNotificationTestSection(context),
-                const SizedBox(height: 20),
-                _buildDataSection(context),
                 const SizedBox(height: 20),
                 _buildAboutSection(context),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppearanceSection(BuildContext context) {
-    return GlassCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Appearance',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            Consumer<ThemeProvider>(
-              builder: (context, themeProvider, child) {
-                return Column(
-                  children: [
-                    _buildSettingTile(
-                      icon: Icons.brightness_6,
-                      title: 'Theme Mode',
-                      trailing: DropdownButton<ThemeMode>(
-                        value: themeProvider.themeMode,
-                        onChanged: (mode) {
-                          if (mode != null) {
-                            themeProvider.setThemeMode(mode);
-                          }
-                        },
-                        items: const [
-                          DropdownMenuItem(
-                            value: ThemeMode.light,
-                            child: Text('Light'),
-                          ),
-                          DropdownMenuItem(
-                            value: ThemeMode.dark,
-                            child: Text('Dark'),
-                          ),
-                          DropdownMenuItem(
-                            value: ThemeMode.system,
-                            child: Text('System'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(),
-                    _buildSettingTile(
-                      icon: Icons.blur_on,
-                      title: 'Glassmorphism Effects',
-                      trailing: Switch(
-                        value: themeProvider.useGlassmorphism,
-                        onChanged: (_) => themeProvider.toggleGlassmorphism(),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageSection(BuildContext context) {
-    return GlassCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Language',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            Consumer<LanguageProvider>(
-              builder: (context, languageProvider, child) {
-                return _buildSettingTile(
-                  icon: Icons.language,
-                  title: 'App Language',
-                  trailing: DropdownButton<String>(
-                    value: languageProvider.locale.languageCode,
-                    onChanged: (code) {
-                      if (code != null) {
-                        languageProvider.setLocale(Locale(code, ''));
-                      }
-                    },
-                    items: const [
-                      DropdownMenuItem(value: 'en', child: Text('English')),
-                      DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
         ),
       ),
     );
@@ -190,44 +82,6 @@ class SettingsScreen extends StatelessWidget {
               title: 'Check Notification Permissions',
               subtitle: 'Verify notification and alarm permissions',
               onTap: () => _checkNotificationPermissions(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDataSection(BuildContext context) {
-    return GlassCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Data Management',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            _buildSettingTile(
-              icon: Icons.backup,
-              title: 'Backup Data',
-              subtitle: 'Export all your data',
-              onTap: () => _showBackupDialog(context),
-            ),
-            const Divider(),
-            _buildSettingTile(
-              icon: Icons.restore,
-              title: 'Restore Data',
-              subtitle: 'Import from backup',
-              onTap: () => _showRestoreDialog(context),
-            ),
-            const Divider(),
-            _buildSettingTile(
-              icon: Icons.delete_forever,
-              title: 'Clear All Data',
-              subtitle: 'Delete all entries and templates',
-              onTap: () => _showClearDataDialog(context),
             ),
           ],
         ),
@@ -301,81 +155,6 @@ class SettingsScreen extends StatelessWidget {
       subtitle: subtitle != null ? Text(subtitle) : null,
       trailing: trailing,
       onTap: onTap,
-    );
-  }
-
-  void _showBackupDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Backup Data'),
-        content: const Text('Export all your journal entries and templates?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Backup created successfully')),
-              );
-            },
-            child: const Text('Backup'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRestoreDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Restore Data'),
-        content: const Text('Select a backup file to restore from.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Select File'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showClearDataDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear All Data'),
-        content: const Text(
-          'This will permanently delete all your entries and templates. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('All data cleared')));
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete All'),
-          ),
-        ],
-      ),
     );
   }
 

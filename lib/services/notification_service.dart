@@ -56,7 +56,10 @@ class NotificationService {
     await iosPlugin?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
-  void _onNotificationTapped(NotificationResponse response) {}
+  void _onNotificationTapped(NotificationResponse response) {
+    // Handle notification tap - could navigate to specific screen
+    print('Notification tapped: ${response.payload}');
+  }
 
   Future<void> showNotification({
     required int id,

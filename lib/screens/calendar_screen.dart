@@ -3,13 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/planner_provider.dart';
 import '../models/entry_model.dart';
-import '../models/template_model.dart';
-import '../utils/template_data.dart' as template_utils;
 import '../widgets/glass_card.dart';
 import 'entry_editor_screen.dart';
-import 'templates/daily_template_screen.dart';
-import 'templates/weekly_template_screen.dart';
-import 'templates/monthly_template_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -109,31 +104,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.event_note_outlined,
+                  Icons.calendar_today_outlined,
                   size: 80,
                   color: Colors.grey[400],
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No entries for this day',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => _createNewEntry(context),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create Entry'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  'Calendar View',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[700],
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Select a date to view details',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Future calendar features will be integrated here',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -243,145 +236,5 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
       ),
     );
-  }
-
-  void _createNewEntry(BuildContext context) {
-    _showTemplateSelectionDialog(context);
-  }
-
-  void _showTemplateSelectionDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Choose Template',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(child: _buildTemplateSelectionGrid(context)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTemplateSelectionGrid(BuildContext context) {
-    final templates = template_utils.PlannerTemplateData.getAllTemplates();
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: templates.length,
-      itemBuilder: (context, index) {
-        final template = templates[index];
-        return GestureDetector(
-          onTap: () {
-            Navigator.pop(context); // Close the dialog
-            _openTemplate(template);
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: template.colors,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(template.icon, size: 40, color: Colors.white),
-                  const SizedBox(height: 8),
-                  Text(
-                    template.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _openTemplate(PlannerTemplate template) {
-    Widget screen;
-
-    switch (template.type) {
-      case TemplateType.daily:
-        screen = DailyTemplateScreen(template: template);
-        break;
-      case TemplateType.weekly:
-        screen = WeeklyTemplateScreen(template: template);
-        break;
-      case TemplateType.monthly:
-        screen = MonthlyTemplateScreen(template: template);
-        break;
-      case TemplateType.yearly:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Yearly template - Coming Soon!')),
-        );
-        return;
-      case TemplateType.meal:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meal template - Coming Soon!')),
-        );
-        return;
-      case TemplateType.finance:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Finance template - Coming Soon!')),
-        );
-        return;
-      case TemplateType.mood:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mood template - Coming Soon!')),
-        );
-        return;
-    }
-
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 }

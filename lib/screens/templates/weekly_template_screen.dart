@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
+import '../../models/saved_template_model.dart';
+import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 
 class WeeklyTemplateScreen extends StatefulWidget {
@@ -383,7 +385,7 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
     );
   }
 
-  void _saveTemplate() {
+  Future<void> _saveTemplate() async {
     final data = <String, dynamic>{
       'weekStartDate': _weekStartDate.toIso8601String(),
       'weekEndDate': _weekEndDate.toIso8601String(),
@@ -396,9 +398,63 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
       };
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Weekly template saved successfully!')),
-    );
-    Navigator.pop(context);
+    try {
+      final databaseHelper = DatabaseHelper();
+
+      if (widget.existingData != null) {
+        final existingTemplates = await databaseHelper.getAllSavedTemplates();
+        final existingTemplate = existingTemplates.firstWhere(
+          (t) =>
+              t.templateId == widget.template.id &&
+              t.updatedAt.isAfter(
+                _weekStartDate.subtract(const Duration(days: 7)),
+              ) &&
+              t.updatedAt.isBefore(_weekEndDate.add(const Duration(days: 7))),
+          orElse: () => SavedTemplateModel.create(
+            templateId: widget.template.id,
+            templateName:
+                '${widget.template.name} - ${DateFormat('MMM dd').format(_weekStartDate)}',
+            templateType: widget.template.type.name,
+            templateDesign: widget.template.design.name,
+            templateColors: widget.template.colors,
+            templateIcon: widget.template.icon,
+            data: data,
+          ),
+        );
+
+        final updatedTemplate = existingTemplate.copyWith(
+          data: data,
+          updatedAt: DateTime.now(),
+        );
+
+        await databaseHelper.updateSavedTemplate(updatedTemplate);
+      } else {
+        final savedTemplate = SavedTemplateModel.create(
+          templateId: widget.template.id,
+          templateName:
+              '${widget.template.name} - ${DateFormat('MMM dd').format(_weekStartDate)}',
+          templateType: widget.template.type.name,
+          templateDesign: widget.template.design.name,
+          templateColors: widget.template.colors,
+          templateIcon: widget.template.icon,
+          data: data,
+        );
+
+        await databaseHelper.insertSavedTemplate(savedTemplate);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Weekly template saved successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving template: $e')));
+      }
+    }
   }
 }

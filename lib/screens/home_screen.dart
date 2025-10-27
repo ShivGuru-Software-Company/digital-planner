@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widgets/glass_card.dart';
 import 'calendar_screen.dart';
 import 'template_selection_screen.dart';
+import 'saved_templates_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -38,6 +38,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const CalendarScreen();
       case 2:
+        return const SavedTemplatesScreen();
+      case 3:
         return const SettingsScreen();
       default:
         return const TemplateSelectionScreen();
@@ -66,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         selectedItemColor: const Color(0xFF6366F1),
         unselectedItemColor: const Color(0xFF9CA3AF),
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -76,6 +79,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.calendar_today_outlined),
             activeIcon: Icon(Icons.calendar_today),
             label: 'Calendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark_outline),
+            activeIcon: Icon(Icons.bookmark),
+            label: 'Saved',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),

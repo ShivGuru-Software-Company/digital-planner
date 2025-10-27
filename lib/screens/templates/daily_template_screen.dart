@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
+import '../../models/saved_template_model.dart';
+import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 
 class DailyTemplateScreen extends StatefulWidget {
@@ -656,8 +658,9 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
     );
   }
 
-  void _saveTemplate() {
+  Future<void> _saveTemplate() async {
     final data = {
+      'selectedDate': _selectedDate.toIso8601String(),
       'weather': _selectedWeather,
       'priorities': _priorityControllers.map((c) => c.text).toList(),
       'todos': _todoControllers.map((c) => c.text).toList(),
@@ -673,10 +676,65 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
       ),
     };
 
-    // TODO: Save to database
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Template saved successfully!')),
-    );
-    Navigator.pop(context);
+    try {
+      final databaseHelper = DatabaseHelper();
+
+      // Check if this is an update to existing template
+      if (widget.existingData != null) {
+        // Find existing template by matching template data
+        final existingTemplates = await databaseHelper.getAllSavedTemplates();
+        final existingTemplate = existingTemplates.firstWhere(
+          (t) =>
+              t.templateId == widget.template.id &&
+              t.updatedAt.day == _selectedDate.day &&
+              t.updatedAt.month == _selectedDate.month &&
+              t.updatedAt.year == _selectedDate.year,
+          orElse: () => SavedTemplateModel.create(
+            templateId: widget.template.id,
+            templateName:
+                '${widget.template.name} - ${DateFormat('MMM dd').format(_selectedDate)}',
+            templateType: widget.template.type.name,
+            templateDesign: widget.template.design.name,
+            templateColors: widget.template.colors,
+            templateIcon: widget.template.icon,
+            data: data,
+          ),
+        );
+
+        final updatedTemplate = existingTemplate.copyWith(
+          data: data,
+          updatedAt: DateTime.now(),
+        );
+
+        await databaseHelper.updateSavedTemplate(updatedTemplate);
+      } else {
+        // Create new saved template
+        final savedTemplate = SavedTemplateModel.create(
+          templateId: widget.template.id,
+          templateName:
+              '${widget.template.name} - ${DateFormat('MMM dd').format(_selectedDate)}',
+          templateType: widget.template.type.name,
+          templateDesign: widget.template.design.name,
+          templateColors: widget.template.colors,
+          templateIcon: widget.template.icon,
+          data: data,
+        );
+
+        await databaseHelper.insertSavedTemplate(savedTemplate);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Template saved successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving template: $e')));
+      }
+    }
   }
 }

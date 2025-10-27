@@ -5,7 +5,7 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../services/pdf_service.dart';
+import '../../widgets/pdf_capture_wrapper.dart';
 
 class WeeklyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -21,7 +21,7 @@ class WeeklyTemplateScreen extends StatefulWidget {
   State<WeeklyTemplateScreen> createState() => _WeeklyTemplateScreenState();
 }
 
-class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
+class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> with PdfExportMixin {
   late DateTime _weekStartDate;
   late DateTime _weekEndDate;
   final Map<String, List<TextEditingController>> _dayControllers = {};
@@ -122,11 +122,13 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
             ],
           ),
         ),
-        child: Column(
-          children: [
-            _buildWeekHeader(),
-            Expanded(child: _buildWeekGrid()),
-          ],
+        child: buildPdfCapturableContent(
+          Column(
+            children: [
+              _buildWeekHeader(),
+              Expanded(child: _buildWeekGrid()),
+            ],
+          ),
         ),
       ),
     );
@@ -348,46 +350,17 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
   }
 
   void _exportAsPDF() async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Create a saved template model for PDF export
-      final templateData = _collectTemplateData();
-      final savedTemplate = SavedTemplateModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        templateId: widget.template.id,
-        templateName: widget.template.name,
-        templateType: 'Weekly',
-        templateDesign: widget.template.design.name,
-        templateIcon: widget.template.icon,
-        templateColors: widget.template.colors,
-        data: templateData,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      // Generate and share PDF
-      await PdfService.shareTemplate(savedTemplate);
-
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
-      }
-    }
+    final templateName = widget.template.name + ' - Week ${_getWeekOfYear()}';
+    await exportTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Weekly',
+      isScrollable: true,
+    );
+  }
+  
+  int _getWeekOfYear() {
+    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
+    return ((dayOfYear - DateTime.now().weekday + 10) / 7).floor();
   }
 
   void _shareTemplate() {

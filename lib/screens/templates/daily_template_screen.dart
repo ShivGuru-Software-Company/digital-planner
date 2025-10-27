@@ -5,7 +5,7 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../services/pdf_service.dart';
+import '../../widgets/pdf_capture_wrapper.dart';
 
 class DailyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -21,7 +21,7 @@ class DailyTemplateScreen extends StatefulWidget {
   State<DailyTemplateScreen> createState() => _DailyTemplateScreenState();
 }
 
-class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
+class _DailyTemplateScreenState extends State<DailyTemplateScreen> with PdfExportMixin {
   late DateTime _selectedDate;
   String _selectedWeather = '';
   final List<TextEditingController> _priorityControllers = [];
@@ -180,20 +180,22 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
             // Always use single column layout for better responsiveness
             return SingleChildScrollView(
               padding: const EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  _buildDateSection(),
-                  const SizedBox(height: 8),
-                  _buildWeatherSection(),
-                  const SizedBox(height: 8),
-                  _buildPrioritiesSection(),
-                  const SizedBox(height: 8),
-                  _buildFinanceSection(),
-                  const SizedBox(height: 8),
-                  _buildWaterTrackerSection(),
-                  const SizedBox(height: 8),
-                  _buildScheduleSection(),
-                ],
+              child: buildPdfCapturableContent(
+                Column(
+                  children: [
+                    _buildDateSection(),
+                    const SizedBox(height: 8),
+                    _buildWeatherSection(),
+                    const SizedBox(height: 8),
+                    _buildPrioritiesSection(),
+                    const SizedBox(height: 8),
+                    _buildFinanceSection(),
+                    const SizedBox(height: 8),
+                    _buildWaterTrackerSection(),
+                    const SizedBox(height: 8),
+                    _buildScheduleSection(),
+                  ],
+                ),
               ),
             );
           },
@@ -632,46 +634,12 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
   }
 
   void _exportAsPDF() async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Create a saved template model for PDF export
-      final templateData = _collectTemplateData();
-      final savedTemplate = SavedTemplateModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        templateId: widget.template.id,
-        templateName: widget.template.name,
-        templateType: 'Daily',
-        templateDesign: widget.template.design.name,
-        templateIcon: widget.template.icon,
-        templateColors: widget.template.colors,
-        data: templateData,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      // Generate and share PDF
-      await PdfService.shareTemplate(savedTemplate);
-
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
-      }
-    }
+    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
+    await exportTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Daily',
+      isScrollable: true,
+    );
   }
 
   void _shareTemplate() {
@@ -679,25 +647,6 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Share Template - Coming Soon!')),
     );
-  }
-
-  Map<String, dynamic> _collectTemplateData() {
-    return {
-      'date': _selectedDate.toIso8601String(),
-      'weather': _selectedWeather,
-      'priorities': _priorityControllers.map((c) => c.text).toList(),
-      'todos': _todoControllers.map((c) => c.text).toList(),
-      'todoStatus': _todoChecked,
-      'tasks': _taskControllers.map((c) => c.text).toList(),
-      'taskStatus': _taskChecked,
-      'moneyIn': _moneyInController.text,
-      'moneyOut': _moneyOutController.text,
-      'comment': _commentController.text,
-      'waterIntake': _waterIntake,
-      'schedule': Map.fromEntries(
-        _scheduleControllers.entries.map((e) => MapEntry(e.key, e.value.text)),
-      ),
-    };
   }
 
   Future<void> _saveTemplate() async {

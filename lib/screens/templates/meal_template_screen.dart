@@ -5,7 +5,7 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../services/pdf_service.dart';
+import '../../widgets/pdf_capture_wrapper.dart';
 
 class MealTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -712,7 +712,10 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
       );
 
       // Generate and share PDF
-      await PdfService.shareTemplate(savedTemplate);
+      // Show message for new PDF export system
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('New PDF export system active! Use Export as PDF button for enhanced PDFs.')),
+      );
 
       if (mounted) {
         Navigator.pop(context); // Close loading dialog

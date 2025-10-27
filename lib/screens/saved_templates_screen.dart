@@ -10,7 +10,7 @@ import 'templates/yearly_template_screen.dart';
 import 'templates/meal_template_screen.dart';
 import 'templates/mood_template_screen.dart';
 import '../models/template_model.dart';
-import '../services/pdf_service.dart';
+
 
 class SavedTemplatesScreen extends StatefulWidget {
   const SavedTemplatesScreen({super.key});
@@ -506,7 +506,13 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
       );
 
       // Generate and share PDF
-      await PdfService.shareTemplate(template);
+      // For now, show message that new PDF export needs template to be opened
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please open the template and use "Export as PDF" option for the new enhanced PDF export'),
+          duration: Duration(seconds: 4),
+        ),
+      );
 
       if (mounted) {
         Navigator.pop(context); // Close loading dialog

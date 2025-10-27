@@ -6,6 +6,9 @@ import 'templates/daily_template_screen.dart';
 import 'templates/weekly_template_screen.dart';
 import 'templates/monthly_template_screen.dart';
 import 'templates/yearly_template_screen.dart';
+import 'templates/meal_template_screen.dart';
+import 'templates/finance_template_screen.dart';
+import 'templates/mood_template_screen.dart';
 
 class TemplateSelectionScreen extends StatefulWidget {
   const TemplateSelectionScreen({super.key});
@@ -445,23 +448,14 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         screen = YearlyTemplateScreen(template: template);
         break;
       case TemplateType.meal:
-        // TODO: Implement meal template
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meal template - Coming Soon!')),
-        );
-        return;
+        screen = MealTemplateScreen(template: template);
+        break;
       case TemplateType.finance:
-        // TODO: Implement finance template
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Finance template - Coming Soon!')),
-        );
-        return;
+        screen = FinanceTemplateScreen(template: template);
+        break;
       case TemplateType.mood:
-        // TODO: Implement mood template
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mood template - Coming Soon!')),
-        );
-        return;
+        screen = MoodTemplateScreen(template: template);
+        break;
     }
 
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));

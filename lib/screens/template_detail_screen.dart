@@ -44,10 +44,7 @@ class TemplateDetailScreen extends StatelessWidget {
                 children: [
                   const Text(
                     'About This Template',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -76,7 +73,7 @@ class TemplateDetailScreen extends StatelessWidget {
       'Create and edit entries',
       'Add drawings and images',
       'Set reminders',
-      'Export as PDF',
+      'Export as multi-page PDF',
       'Fully customizable',
     ];
 
@@ -85,37 +82,29 @@ class TemplateDetailScreen extends StatelessWidget {
       children: [
         const Text(
           'Features',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...features.map((feature) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: template.colors),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Colors.white,
-                    ),
+        ...features.map(
+          (feature) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: template.colors),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    feature,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            )),
+                  child: const Icon(Icons.check, size: 16, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Text(feature, style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -131,9 +120,7 @@ class TemplateDetailScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => EntryEditorScreen(
-                    template: template,
-                  ),
+                  builder: (_) => EntryEditorScreen(template: template),
                 ),
               );
             },
@@ -146,10 +133,7 @@ class TemplateDetailScreen extends StatelessWidget {
             ),
             child: const Text(
               'Start Using Template',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -158,8 +142,7 @@ class TemplateDetailScreen extends StatelessWidget {
           width: double.infinity,
           height: 56,
           child: OutlinedButton(
-            onPressed: () {
-            },
+            onPressed: () {},
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF6366F1),
               side: const BorderSide(color: Color(0xFF6366F1)),
@@ -169,10 +152,7 @@ class TemplateDetailScreen extends StatelessWidget {
             ),
             child: const Text(
               'Customize Template',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
           ),
         ),

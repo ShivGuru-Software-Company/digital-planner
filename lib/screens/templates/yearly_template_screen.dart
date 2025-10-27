@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
 import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
+import '../../services/pdf_service.dart';
 
 class YearlyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -394,14 +394,6 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Export as Image'),
-              onTap: () {
-                Navigator.pop(context);
-                _exportAsImage();
-              },
-            ),
-            ListTile(
               leading: const Icon(Icons.picture_as_pdf),
               title: const Text('Export as PDF'),
               onTap: () {
@@ -423,22 +415,62 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
     );
   }
 
-  void _exportAsImage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as Image - Coming Soon!')),
-    );
-  }
+  void _exportAsPDF() async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
 
-  void _exportAsPDF() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as PDF - Coming Soon!')),
-    );
+      // Create a saved template model for PDF export
+      final templateData = _collectTemplateData();
+      final savedTemplate = SavedTemplateModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        templateId: widget.template.id,
+        templateName: widget.template.name,
+        templateType: 'Yearly',
+        templateDesign: widget.template.design.name,
+        templateIcon: widget.template.icon,
+        templateColors: widget.template.colors,
+        data: templateData,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Generate and share PDF
+      await PdfService.shareTemplate(savedTemplate);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF exported successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
+      }
+    }
   }
 
   void _shareTemplate() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Share Template - Coming Soon!')),
     );
+  }
+
+  Map<String, dynamic> _collectTemplateData() {
+    return {
+      'selectedYear': _selectedYear,
+      'monthNotes': Map.fromEntries(
+        _monthNotes.entries.map((e) => MapEntry(e.key.toString(), e.value)),
+      ),
+    };
   }
 
   Future<void> _saveTemplate() async {

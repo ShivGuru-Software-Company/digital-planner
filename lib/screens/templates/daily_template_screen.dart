@@ -4,6 +4,7 @@ import '../../models/template_model.dart';
 import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
+import '../../services/pdf_service.dart';
 
 class DailyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -608,14 +609,6 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Export as Image'),
-              onTap: () {
-                Navigator.pop(context);
-                _exportAsImage();
-              },
-            ),
-            ListTile(
               leading: const Icon(Icons.picture_as_pdf),
               title: const Text('Export as PDF'),
               onTap: () {
@@ -637,18 +630,47 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
     );
   }
 
-  void _exportAsImage() {
-    // TODO: Implement image export
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as Image - Coming Soon!')),
-    );
-  }
+  void _exportAsPDF() async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
 
-  void _exportAsPDF() {
-    // TODO: Implement PDF export
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as PDF - Coming Soon!')),
-    );
+      // Create a saved template model for PDF export
+      final templateData = _collectTemplateData();
+      final savedTemplate = SavedTemplateModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        templateId: widget.template.id,
+        templateName: widget.template.name,
+        templateType: 'Daily',
+        templateDesign: widget.template.design.name,
+        templateIcon: widget.template.icon,
+        templateColors: widget.template.colors,
+        data: templateData,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Generate and share PDF
+      await PdfService.shareTemplate(savedTemplate);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF exported successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
+      }
+    }
   }
 
   void _shareTemplate() {
@@ -656,6 +678,25 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Share Template - Coming Soon!')),
     );
+  }
+
+  Map<String, dynamic> _collectTemplateData() {
+    return {
+      'date': _selectedDate.toIso8601String(),
+      'weather': _selectedWeather,
+      'priorities': _priorityControllers.map((c) => c.text).toList(),
+      'todos': _todoControllers.map((c) => c.text).toList(),
+      'todoStatus': _todoChecked,
+      'tasks': _taskControllers.map((c) => c.text).toList(),
+      'taskStatus': _taskChecked,
+      'moneyIn': _moneyInController.text,
+      'moneyOut': _moneyOutController.text,
+      'comment': _commentController.text,
+      'waterIntake': _waterIntake,
+      'schedule': Map.fromEntries(
+        _scheduleControllers.entries.map((e) => MapEntry(e.key, e.value.text)),
+      ),
+    };
   }
 
   Future<void> _saveTemplate() async {

@@ -10,6 +10,7 @@ import 'templates/yearly_template_screen.dart';
 import 'templates/meal_template_screen.dart';
 import 'templates/mood_template_screen.dart';
 import '../models/template_model.dart';
+import '../services/pdf_service.dart';
 
 class SavedTemplatesScreen extends StatefulWidget {
   const SavedTemplatesScreen({super.key});
@@ -333,16 +334,7 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
-                      value: 'export_png',
-                      child: Row(
-                        children: [
-                          Icon(Icons.image, size: 16),
-                          SizedBox(width: 8),
-                          Text('Export as PNG'),
-                        ],
-                      ),
-                    ),
+
                     const PopupMenuItem(
                       value: 'export_pdf',
                       child: Row(
@@ -389,9 +381,7 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
       case 'edit':
         _openTemplate(template);
         break;
-      case 'export_png':
-        _exportAsPNG(template);
-        break;
+
       case 'export_pdf':
         _exportAsPDF(template);
         break;
@@ -506,16 +496,32 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
     }
   }
 
-  void _exportAsPNG(SavedTemplateModel template) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as PNG - Coming Soon!')),
-    );
-  }
+  void _exportAsPDF(SavedTemplateModel template) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
 
-  void _exportAsPDF(SavedTemplateModel template) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as PDF - Coming Soon!')),
-    );
+      // Generate and share PDF
+      await PdfService.shareTemplate(template);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF exported successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
+      }
+    }
   }
 
   void _shareTemplate(SavedTemplateModel template) {

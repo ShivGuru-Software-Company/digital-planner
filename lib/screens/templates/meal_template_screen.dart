@@ -4,6 +4,7 @@ import '../../models/template_model.dart';
 import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
+import '../../services/pdf_service.dart';
 
 class MealTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -355,7 +356,7 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
             const SizedBox(height: 6),
             Center(
               child: Text(
-                '${_waterIntake * 250}ml / 2000ml (${_waterIntake}/8 glasses)',
+                '${_waterIntake * 250}ml / 2000ml ($_waterIntake/8 glasses)',
                 style: TextStyle(fontSize: 10, color: Colors.grey[600]),
               ),
             ),
@@ -404,7 +405,7 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${calories} cal',
+                      '$calories cal',
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w600,
@@ -664,14 +665,6 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Export as Image'),
-              onTap: () {
-                Navigator.pop(context);
-                _exportAsImage();
-              },
-            ),
-            ListTile(
               leading: const Icon(Icons.picture_as_pdf),
               title: const Text('Export as PDF'),
               onTap: () {
@@ -693,22 +686,72 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
     );
   }
 
-  void _exportAsImage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as Image - Coming Soon!')),
-    );
-  }
+  void _exportAsPDF() async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
 
-  void _exportAsPDF() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export as PDF - Coming Soon!')),
-    );
+      // Create a saved template model for PDF export
+      final templateData = _collectTemplateData();
+      final savedTemplate = SavedTemplateModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        templateId: widget.template.id,
+        templateName: widget.template.name,
+        templateType: 'Meal',
+        templateDesign: widget.template.design.name,
+        templateIcon: widget.template.icon,
+        templateColors: widget.template.colors,
+        data: templateData,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Generate and share PDF
+      await PdfService.shareTemplate(savedTemplate);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF exported successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
+      }
+    }
   }
 
   void _shareMealPlan() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Share Meal Plan - Coming Soon!')),
     );
+  }
+
+  Map<String, dynamic> _collectTemplateData() {
+    final data = {
+      'selectedDate': _selectedDate.toIso8601String(),
+      'waterIntake': _waterIntake,
+      'totalCalories': _totalCalories,
+    };
+
+    // Add meal data
+    for (String mealType in _mealTypes) {
+      data[mealType] = {
+        'meal': _mealControllers[mealType]!.text,
+        'calories': _caloriesData[mealType] ?? 0,
+        'ingredients': _ingredientsData[mealType] ?? [],
+      };
+    }
+
+    return data;
   }
 
   Future<void> _saveTemplate() async {

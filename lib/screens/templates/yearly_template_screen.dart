@@ -3,6 +3,7 @@ import '../../models/template_model.dart';
 import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/save_template_dialog.dart';
 import '../../services/pdf_service.dart';
 
 class YearlyTemplateScreen extends StatefulWidget {
@@ -474,6 +475,32 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
   }
 
   Future<void> _saveTemplate() async {
+    // Show save dialog to get custom name
+    final customName = await _showSaveDialog();
+    if (customName == null) return; // User cancelled
+
+    await _performSave(customName);
+  }
+
+  Future<String?> _showSaveDialog() async {
+    final defaultName = '${widget.template.name} - $_selectedYear';
+
+    return await Navigator.of(context).push<String>(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            SaveTemplateDialog(
+              defaultName: defaultName,
+              templateType: 'Yearly',
+            ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+
+  Future<void> _performSave(String customName) async {
     final data = {
       'selectedYear': _selectedYear,
       'monthNotes': Map.fromEntries(
@@ -492,7 +519,7 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
               t.updatedAt.year == _selectedYear,
           orElse: () => SavedTemplateModel.create(
             templateId: widget.template.id,
-            templateName: '${widget.template.name} - $_selectedYear',
+            templateName: customName,
             templateType: widget.template.type.name,
             templateDesign: widget.template.design.name,
             templateColors: widget.template.colors,
@@ -502,6 +529,7 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
         );
 
         final updatedTemplate = existingTemplate.copyWith(
+          templateName: customName,
           data: data,
           updatedAt: DateTime.now(),
         );
@@ -510,7 +538,7 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
       } else {
         final savedTemplate = SavedTemplateModel.create(
           templateId: widget.template.id,
-          templateName: '${widget.template.name} - $_selectedYear',
+          templateName: customName,
           templateType: widget.template.type.name,
           templateDesign: widget.template.design.name,
           templateColors: widget.template.colors,
@@ -523,7 +551,7 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Yearly template saved successfully!')),
+          SnackBar(content: Text('Template "$customName" saved successfully!')),
         );
         Navigator.pop(context);
       }

@@ -4,6 +4,7 @@ import '../../models/template_model.dart';
 import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/save_template_dialog.dart';
 import '../../services/pdf_service.dart';
 
 class MonthlyTemplateScreen extends StatefulWidget {
@@ -501,6 +502,33 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> {
   }
 
   Future<void> _saveTemplate() async {
+    // Show save dialog to get custom name
+    final customName = await _showSaveDialog();
+    if (customName == null) return; // User cancelled
+
+    await _performSave(customName);
+  }
+
+  Future<String?> _showSaveDialog() async {
+    final defaultName =
+        '${widget.template.name} - ${DateFormat('MMMM yyyy').format(_selectedMonth)}';
+
+    return await Navigator.of(context).push<String>(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            SaveTemplateDialog(
+              defaultName: defaultName,
+              templateType: 'Monthly',
+            ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+
+  Future<void> _performSave(String customName) async {
     final data = {
       'selectedMonth': _selectedMonth.toIso8601String(),
       'dayNotes': Map.fromEntries(
@@ -520,8 +548,7 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> {
               t.updatedAt.year == _selectedMonth.year,
           orElse: () => SavedTemplateModel.create(
             templateId: widget.template.id,
-            templateName:
-                '${widget.template.name} - ${DateFormat('MMMM yyyy').format(_selectedMonth)}',
+            templateName: customName,
             templateType: widget.template.type.name,
             templateDesign: widget.template.design.name,
             templateColors: widget.template.colors,
@@ -539,8 +566,7 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> {
       } else {
         final savedTemplate = SavedTemplateModel.create(
           templateId: widget.template.id,
-          templateName:
-              '${widget.template.name} - ${DateFormat('MMMM yyyy').format(_selectedMonth)}',
+          templateName: customName,
           templateType: widget.template.type.name,
           templateDesign: widget.template.design.name,
           templateColors: widget.template.colors,

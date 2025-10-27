@@ -4,6 +4,7 @@ import '../../models/template_model.dart';
 import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/save_template_dialog.dart';
 import '../../services/pdf_service.dart';
 
 class DailyTemplateScreen extends StatefulWidget {
@@ -700,6 +701,30 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
   }
 
   Future<void> _saveTemplate() async {
+    // Show save dialog to get custom name
+    final customName = await _showSaveDialog();
+    if (customName == null) return; // User cancelled
+
+    await _performSave(customName);
+  }
+
+  Future<String?> _showSaveDialog() async {
+    final defaultName =
+        '${widget.template.name} - ${DateFormat('MMM dd').format(_selectedDate)}';
+
+    return await Navigator.of(context).push<String>(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            SaveTemplateDialog(defaultName: defaultName, templateType: 'Daily'),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+
+  Future<void> _performSave(String customName) async {
     final data = {
       'selectedDate': _selectedDate.toIso8601String(),
       'weather': _selectedWeather,
@@ -732,8 +757,7 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
               t.updatedAt.year == _selectedDate.year,
           orElse: () => SavedTemplateModel.create(
             templateId: widget.template.id,
-            templateName:
-                '${widget.template.name} - ${DateFormat('MMM dd').format(_selectedDate)}',
+            templateName: customName,
             templateType: widget.template.type.name,
             templateDesign: widget.template.design.name,
             templateColors: widget.template.colors,
@@ -752,8 +776,7 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
         // Create new saved template
         final savedTemplate = SavedTemplateModel.create(
           templateId: widget.template.id,
-          templateName:
-              '${widget.template.name} - ${DateFormat('MMM dd').format(_selectedDate)}',
+          templateName: customName,
           templateType: widget.template.type.name,
           templateDesign: widget.template.design.name,
           templateColors: widget.template.colors,

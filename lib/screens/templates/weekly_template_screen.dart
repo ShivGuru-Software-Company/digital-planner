@@ -4,6 +4,7 @@ import '../../models/template_model.dart';
 import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/save_template_dialog.dart';
 import '../../services/pdf_service.dart';
 
 class WeeklyTemplateScreen extends StatefulWidget {
@@ -412,6 +413,33 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
   }
 
   Future<void> _saveTemplate() async {
+    // Show save dialog to get custom name
+    final customName = await _showSaveDialog();
+    if (customName == null) return; // User cancelled
+
+    await _performSave(customName);
+  }
+
+  Future<String?> _showSaveDialog() async {
+    final defaultName =
+        '${widget.template.name} - ${DateFormat('MMM dd').format(_weekStartDate)}';
+
+    return await Navigator.of(context).push<String>(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            SaveTemplateDialog(
+              defaultName: defaultName,
+              templateType: 'Weekly',
+            ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+
+  Future<void> _performSave(String customName) async {
     final data = <String, dynamic>{
       'weekStartDate': _weekStartDate.toIso8601String(),
       'weekEndDate': _weekEndDate.toIso8601String(),
@@ -438,8 +466,7 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
               t.updatedAt.isBefore(_weekEndDate.add(const Duration(days: 7))),
           orElse: () => SavedTemplateModel.create(
             templateId: widget.template.id,
-            templateName:
-                '${widget.template.name} - ${DateFormat('MMM dd').format(_weekStartDate)}',
+            templateName: customName,
             templateType: widget.template.type.name,
             templateDesign: widget.template.design.name,
             templateColors: widget.template.colors,
@@ -457,8 +484,7 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
       } else {
         final savedTemplate = SavedTemplateModel.create(
           templateId: widget.template.id,
-          templateName:
-              '${widget.template.name} - ${DateFormat('MMM dd').format(_weekStartDate)}',
+          templateName: customName,
           templateType: widget.template.type.name,
           templateDesign: widget.template.design.name,
           templateColors: widget.template.colors,

@@ -642,10 +642,12 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> with PdfExpor
     );
   }
 
-  void _shareTemplate() {
-    // TODO: Implement sharing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share Template - Coming Soon!')),
+  void _shareTemplate() async {
+    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
+    await shareTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Daily',
+      isScrollable: true,
     );
   }
 

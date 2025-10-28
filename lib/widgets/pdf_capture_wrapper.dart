@@ -25,8 +25,59 @@ class _PdfCaptureWrapperState extends State<PdfCaptureWrapper> {
   final GlobalKey _captureKey = GlobalKey();
   bool _isExporting = false;
 
-  /// Export the wrapped template as PDF
+  /// Export the wrapped template as PDF (save only, no share dialog)
   Future<void> exportToPdf() async {
+    if (_isExporting) return;
+    
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      if (widget.isScrollable) {
+        await TemplateToPdfService.exportScrollableTemplateToPdf(
+          scrollableKey: _captureKey,
+          templateName: widget.templateName,
+          templateType: widget.templateType,
+        );
+      } else {
+        await TemplateToPdfService.exportTemplateToPdf(
+          widgetKey: _captureKey,
+          templateName: widget.templateName,
+          templateType: widget.templateType,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF exported successfully! \nSaved to Downloads/Digital Planner folder.'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to export PDF: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
+    }
+  }
+
+  /// Share the wrapped template as PDF (save + open share dialog)
+  Future<void> shareToPdf() async {
     if (_isExporting) return;
     
     setState(() {
@@ -51,9 +102,9 @@ class _PdfCaptureWrapperState extends State<PdfCaptureWrapper> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('PDF exported successfully! Saved to Digital Planner PDFs folder.'),
+            content: Text('PDF shared successfully!'),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -61,7 +112,7 @@ class _PdfCaptureWrapperState extends State<PdfCaptureWrapper> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to export PDF: $e'),
+            content: Text('Failed to share PDF: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -122,8 +173,63 @@ mixin PdfExportMixin<T extends StatefulWidget> on State<T> {
   final GlobalKey pdfCaptureKey = GlobalKey();
   bool isExportingPdf = false;
 
-  /// Export the current template as PDF
+  /// Export the current template as PDF (save only, no share dialog)
   Future<void> exportTemplateToPdf({
+    required String templateName,
+    required String templateType,
+    bool isScrollable = false,
+  }) async {
+    if (isExportingPdf) return;
+    
+    setState(() {
+      isExportingPdf = true;
+    });
+
+    try {
+      if (isScrollable) {
+        await TemplateToPdfService.exportScrollableTemplateToPdf(
+          scrollableKey: pdfCaptureKey,
+          templateName: templateName,
+          templateType: templateType,
+        );
+      } else {
+        await TemplateToPdfService.exportTemplateToPdf(
+          widgetKey: pdfCaptureKey,
+          templateName: templateName,
+          templateType: templateType,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF exported successfully! \nSaved to Downloads/Digital Planner folder.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isExportingPdf = false;
+        });
+      }
+    }
+  }
+
+  /// Share the current template as PDF (save + open share dialog)
+  Future<void> shareTemplateToPdf({
     required String templateName,
     required String templateType,
     bool isScrollable = false,
@@ -152,9 +258,9 @@ mixin PdfExportMixin<T extends StatefulWidget> on State<T> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('PDF exported successfully! Check your Digital Planner PDFs folder.'),
+            content: Text('PDF shared successfully!'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -162,7 +268,7 @@ mixin PdfExportMixin<T extends StatefulWidget> on State<T> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export failed: ${e.toString()}'),
+            content: Text('Share failed: ${e.toString()}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),

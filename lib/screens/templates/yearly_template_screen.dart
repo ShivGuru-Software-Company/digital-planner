@@ -20,7 +20,7 @@ class YearlyTemplateScreen extends StatefulWidget {
   State<YearlyTemplateScreen> createState() => _YearlyTemplateScreenState();
 }
 
-class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
+class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> with PdfExportMixin {
   late int _selectedYear;
   final Map<int, TextEditingController> _monthControllers = {};
   final Map<int, String> _monthNotes = {};
@@ -106,11 +106,13 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
             ],
           ),
         ),
-        child: Column(
-          children: [
-            _buildYearHeader(),
-            Expanded(child: _buildMonthsGrid()),
-          ],
+        child: buildPdfCapturableContent(
+          Column(
+            children: [
+              _buildYearHeader(),
+              Expanded(child: _buildMonthsGrid()),
+            ],
+          ),
         ),
       ),
     );
@@ -417,54 +419,20 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
   }
 
   void _exportAsPDF() async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Create a saved template model for PDF export
-      final templateData = _collectTemplateData();
-      final savedTemplate = SavedTemplateModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        templateId: widget.template.id,
-        templateName: widget.template.name,
-        templateType: 'Yearly',
-        templateDesign: widget.template.design.name,
-        templateIcon: widget.template.icon,
-        templateColors: widget.template.colors,
-        data: templateData,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      // Generate and share PDF
-      // Show message for new PDF export system
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New PDF export system active! Use Export as PDF button for enhanced PDFs.')),
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
-      }
-    }
+    final templateName = widget.template.name + ' - ${_selectedYear}';
+    await exportTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Yearly',
+      isScrollable: false,
+    );
   }
 
-  void _shareTemplate() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share Template - Coming Soon!')),
+  void _shareTemplate() async {
+    final templateName = widget.template.name + ' - ${_selectedYear}';
+    await shareTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Yearly',
+      isScrollable: false,
     );
   }
 

@@ -21,7 +21,7 @@ class MoodTemplateScreen extends StatefulWidget {
   State<MoodTemplateScreen> createState() => _MoodTemplateScreenState();
 }
 
-class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
+class _MoodTemplateScreenState extends State<MoodTemplateScreen> with PdfExportMixin {
   late DateTime _selectedDate;
 
   // Mood tracking
@@ -150,22 +150,24 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              _buildDateSection(),
-              const SizedBox(height: 8),
-              _buildMoodSelector(),
-              const SizedBox(height: 8),
-              _buildMoodMetrics(),
-              const SizedBox(height: 8),
-              _buildActivitiesSection(),
-              const SizedBox(height: 8),
-              _buildTriggersSection(),
-              const SizedBox(height: 8),
-              _buildJournalSection(),
-              const SizedBox(height: 8),
-              _buildWellnessInsights(),
-            ],
+          child: buildPdfCapturableContent(
+            Column(
+              children: [
+                _buildDateSection(),
+                const SizedBox(height: 8),
+                _buildMoodSelector(),
+                const SizedBox(height: 8),
+                _buildMoodMetrics(),
+                const SizedBox(height: 8),
+                _buildActivitiesSection(),
+                const SizedBox(height: 8),
+                _buildTriggersSection(),
+                const SizedBox(height: 8),
+                _buildJournalSection(),
+                const SizedBox(height: 8),
+                _buildWellnessInsights(),
+              ],
+            ),
           ),
         ),
       ),
@@ -747,54 +749,20 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
   }
 
   void _exportAsPDF() async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Create a saved template model for PDF export
-      final templateData = _collectTemplateData();
-      final savedTemplate = SavedTemplateModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        templateId: widget.template.id,
-        templateName: widget.template.name,
-        templateType: 'Mood',
-        templateDesign: widget.template.design.name,
-        templateIcon: widget.template.icon,
-        templateColors: widget.template.colors,
-        data: templateData,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      // Generate and share PDF
-      // Show message for new PDF export system
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New PDF export system active! Use Export as PDF button for enhanced PDFs.')),
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
-      }
-    }
+    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
+    await exportTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Mood',
+      isScrollable: true,
+    );
   }
 
-  void _shareMoodReport() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share Mood Report - Coming Soon!')),
+  void _shareMoodReport() async {
+    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
+    await shareTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Mood',
+      isScrollable: true,
     );
   }
 

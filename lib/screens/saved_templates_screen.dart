@@ -505,19 +505,14 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Generate and share PDF
-      // For now, show message that new PDF export needs template to be opened
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please open the template and use "Export as PDF" option for the new enhanced PDF export'),
-          duration: Duration(seconds: 4),
-        ),
-      );
-
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
+          const SnackBar(
+            content: Text('✨ New PDF Export Available! \nOpen this template and use the "Export as PDF" button for high-quality PDF export.'),
+            duration: Duration(seconds: 5),
+            backgroundColor: Colors.deepPurple,
+          ),
         );
       }
     } catch (e) {

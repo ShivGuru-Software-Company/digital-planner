@@ -220,32 +220,48 @@ class TemplateToPdfService {
     String templateType,
   ) async {
     try {
-      // Get the app's documents directory
-      final Directory appDocDir = await getApplicationDocumentsDirectory();
+      // Try to get external storage directory first (more accessible to users)
+      Directory? externalDir;
       
-      // Create a dedicated folder for PDF exports
-      final Directory pdfDir = Directory('${appDocDir.path}/Digital_Planner_PDFs');
-      if (!await pdfDir.exists()) {
-        await pdfDir.create(recursive: true);
+      try {
+        // Try to get Downloads directory (most accessible)
+        if (Platform.isAndroid) {
+          externalDir = Directory('/storage/emulated/0/Download/Digital Planner');
+        }
+        
+        // If external directory doesn't work or we're not on Android, use documents
+        if (externalDir == null || !await externalDir.exists()) {
+          final Directory appDocDir = await getApplicationDocumentsDirectory();
+          externalDir = Directory('${appDocDir.path}/Digital Planner');
+        }
+      } catch (e) {
+        // Fallback to app documents directory
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+        externalDir = Directory('${appDocDir.path}/Digital Planner');
+      }
+      
+      // Create the Digital Planner folder
+      if (!await externalDir.exists()) {
+        await externalDir.create(recursive: true);
       }
       
       // Generate filename with timestamp to avoid conflicts
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
       final String sanitizedName = templateName.replaceAll(RegExp(r'[^\w\s-]'), '').trim();
-      final String filename = '${sanitizedName}_${templateType}_$timestamp.pdf';
+      final String filename = '${sanitizedName}_$timestamp.pdf';
       
       // Save the PDF file
-      final File file = File('${pdfDir.path}/$filename');
+      final File file = File('${externalDir.path}/$filename');
       final Uint8List pdfBytes = await pdf.save();
       await file.writeAsBytes(pdfBytes);
       
       return file;
     } catch (e) {
-      // Fallback to temporary directory if documents directory fails
+      // Final fallback to temporary directory
       final Directory tempDir = await getTemporaryDirectory();
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
       final String sanitizedName = templateName.replaceAll(RegExp(r'[^\w\s-]'), '').trim();
-      final String filename = '${sanitizedName}_${templateType}_$timestamp.pdf';
+      final String filename = '${sanitizedName}_$timestamp.pdf';
       
       final File file = File('${tempDir.path}/$filename');
       final Uint8List pdfBytes = await pdf.save();
@@ -255,6 +271,40 @@ class TemplateToPdfService {
     }
   }
   
+  /// Export PDF (save only, no share dialog)
+  static Future<File> exportTemplateToPdf({
+    required GlobalKey widgetKey,
+    required String templateName,
+    required String templateType,
+  }) async {
+    try {
+      return await convertTemplateToPdf(
+        widgetKey: widgetKey,
+        templateName: templateName,
+        templateType: templateType,
+      );
+    } catch (e) {
+      throw Exception('Failed to export template PDF: $e');
+    }
+  }
+  
+  /// Export scrollable PDF (save only, no share dialog)
+  static Future<File> exportScrollableTemplateToPdf({
+    required GlobalKey scrollableKey,
+    required String templateName,
+    required String templateType,
+  }) async {
+    try {
+      return await convertScrollableTemplateToPdf(
+        scrollableKey: scrollableKey,
+        templateName: templateName,
+        templateType: templateType,
+      );
+    } catch (e) {
+      throw Exception('Failed to export scrollable template PDF: $e');
+    }
+  }
+
   /// Share the PDF file using the platform's share functionality
   static Future<void> shareTemplatePdf({
     required GlobalKey widgetKey,
@@ -329,8 +379,24 @@ class TemplateToPdfService {
   /// Get the path where PDFs are saved
   static Future<String> getPdfSaveDirectory() async {
     try {
-      final Directory appDocDir = await getApplicationDocumentsDirectory();
-      return '${appDocDir.path}/Digital_Planner_PDFs';
+      // Try to get the same directory structure as _savePdfFile
+      Directory? externalDir;
+      
+      try {
+        if (Platform.isAndroid) {
+          externalDir = Directory('/storage/emulated/0/Download/Digital Planner');
+        }
+        
+        if (externalDir == null || !await externalDir.exists()) {
+          final Directory appDocDir = await getApplicationDocumentsDirectory();
+          externalDir = Directory('${appDocDir.path}/Digital Planner');
+        }
+      } catch (e) {
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+        externalDir = Directory('${appDocDir.path}/Digital Planner');
+      }
+      
+      return externalDir.path;
     } catch (e) {
       final Directory tempDir = await getTemporaryDirectory();
       return tempDir.path;

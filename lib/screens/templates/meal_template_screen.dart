@@ -21,7 +21,7 @@ class MealTemplateScreen extends StatefulWidget {
   State<MealTemplateScreen> createState() => _MealTemplateScreenState();
 }
 
-class _MealTemplateScreenState extends State<MealTemplateScreen> {
+class _MealTemplateScreenState extends State<MealTemplateScreen> with PdfExportMixin {
   late DateTime _selectedDate;
 
   // Meal controllers
@@ -148,11 +148,12 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              _buildDateSection(),
-              const SizedBox(height: 8),
-              _buildNutritionOverview(),
+          child: buildPdfCapturableContent(
+            Column(
+              children: [
+                _buildDateSection(),
+                const SizedBox(height: 8),
+                _buildNutritionOverview(),
               const SizedBox(height: 8),
               _buildWaterTracker(),
               const SizedBox(height: 8),
@@ -164,7 +165,8 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
                   ],
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -688,54 +690,20 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
   }
 
   void _exportAsPDF() async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Create a saved template model for PDF export
-      final templateData = _collectTemplateData();
-      final savedTemplate = SavedTemplateModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        templateId: widget.template.id,
-        templateName: widget.template.name,
-        templateType: 'Meal',
-        templateDesign: widget.template.design.name,
-        templateIcon: widget.template.icon,
-        templateColors: widget.template.colors,
-        data: templateData,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      // Generate and share PDF
-      // Show message for new PDF export system
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New PDF export system active! Use Export as PDF button for enhanced PDFs.')),
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
-      }
-    }
+    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
+    await exportTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Meal',
+      isScrollable: true,
+    );
   }
 
-  void _shareMealPlan() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share Meal Plan - Coming Soon!')),
+  void _shareMealPlan() async {
+    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
+    await shareTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Meal',
+      isScrollable: true,
     );
   }
 

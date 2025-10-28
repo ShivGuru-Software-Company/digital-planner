@@ -99,12 +99,14 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> with PdfE
             ],
           ),
         ),
-        child: Column(
-          children: [
-            _buildMonthHeader(),
-            _buildWeekDaysHeader(),
-            Expanded(child: _buildCalendarGrid()),
-          ],
+        child: buildPdfCapturableContent(
+          Column(
+            children: [
+              _buildMonthHeader(),
+              _buildWeekDaysHeader(),
+              Expanded(child: _buildCalendarGrid()),
+            ],
+          ),
         ),
       ),
     );
@@ -444,54 +446,20 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> with PdfE
   }
 
   void _exportAsPDF() async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Create a saved template model for PDF export
-      final templateData = _collectTemplateData();
-      final savedTemplate = SavedTemplateModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        templateId: widget.template.id,
-        templateName: widget.template.name,
-        templateType: 'Monthly',
-        templateDesign: widget.template.design.name,
-        templateIcon: widget.template.icon,
-        templateColors: widget.template.colors,
-        data: templateData,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      // Generate and share PDF
-      // Show message for new PDF export system
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New PDF export system active! Use Export as PDF button for enhanced PDFs.')),
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
-      }
-    }
+    final templateName = widget.template.name + ' - ${DateFormat('MMM yyyy').format(_selectedMonth)}';
+    await exportTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Monthly',
+      isScrollable: true,
+    );
   }
 
-  void _shareTemplate() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share Template - Coming Soon!')),
+  void _shareTemplate() async {
+    final templateName = widget.template.name + ' - ${DateFormat('MMM yyyy').format(_selectedMonth)}';
+    await shareTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Monthly',
+      isScrollable: true,
     );
   }
 

@@ -363,9 +363,12 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> with PdfExp
     return ((dayOfYear - DateTime.now().weekday + 10) / 7).floor();
   }
 
-  void _shareTemplate() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share Template - Coming Soon!')),
+  void _shareTemplate() async {
+    final templateName = widget.template.name + ' - Week ${_getWeekOfYear()}';
+    await shareTemplateToPdf(
+      templateName: templateName,
+      templateType: 'Weekly',
+      isScrollable: true,
     );
   }
 

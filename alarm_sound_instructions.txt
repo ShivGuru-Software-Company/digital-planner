@@ -1,0 +1,20 @@
+ALARM SOUND SETUP INSTRUCTIONS:
+===============================
+
+1. Download or create an alarm sound file in MP3 format
+2. Name it exactly: alarm_sound.mp3
+3. Place it in this folder: android/app/src/main/res/raw/
+4. Replace this instruction file
+
+The sound file should be:
+- Short duration (3-5 seconds) as it will loop
+- Clear and audible alarm tone
+- Not too large (keep under 1MB for app size)
+
+Example alarm sounds you can use:
+- Classic beep-beep-beep
+- Siren sound
+- Bell ringing
+- Buzzer sound
+
+Once you add the alarm_sound.mp3 file, the alarm will automatically use it for ringing.

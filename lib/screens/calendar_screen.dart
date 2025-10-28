@@ -55,7 +55,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateNotificationDialog(),
         backgroundColor: const Color(0xFF6366F1),
-        child: const Icon(Icons.add_alert, color: Colors.white),
+        tooltip: 'Create Alarm',
+        child: const Icon(Icons.alarm_add, color: Colors.white),
       ),
     );
   }
@@ -538,8 +539,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
           SnackBar(
             content: Text(
               success
-                  ? 'Notification created successfully!'
-                  : 'Failed to create notification',
+                  ? 'Alarm scheduled successfully!'
+                  : 'Failed to schedule alarm',
             ),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
@@ -550,7 +551,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error creating notification: $e'),
+            content: Text('Error scheduling alarm: $e'),
             backgroundColor: Colors.red,
           ),
         );

@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import '../models/entry_model.dart';
 import '../models/template_model.dart';
 import '../providers/planner_provider.dart';
-import '../services/notification_service.dart';
 import 'drawing_screen.dart';
 
 class EntryEditorScreen extends StatefulWidget {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/notification_model.dart';
 import '../database/database_helper.dart';
-import '../services/notification_service.dart';
+import '../services/alarm_service.dart';
 
 class NotificationProvider extends ChangeNotifier {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  final NotificationService _notificationService = NotificationService.instance;
+  final AlarmService _alarmService = AlarmService.instance;
 
   List<NotificationModel> _notifications = [];
   bool _isLoading = false;
@@ -85,8 +85,8 @@ class NotificationProvider extends ChangeNotifier {
       // Update in database
       await _databaseHelper.updateNotification(notification);
 
-      // Cancel old notification and schedule new one
-      await _notificationService.cancelNotification(
+      // Cancel old alarm and schedule new one
+      await _alarmService.cancelNotification(
         notification.notificationId,
       );
       await _scheduleNotification(notification);
@@ -113,8 +113,8 @@ class NotificationProvider extends ChangeNotifier {
     try {
       final notification = _notifications.firstWhere((n) => n.id == id);
 
-      // Cancel the scheduled notification
-      await _notificationService.cancelNotification(
+      // Cancel the scheduled alarm
+      await _alarmService.cancelNotification(
         notification.notificationId,
       );
 
@@ -161,7 +161,7 @@ class NotificationProvider extends ChangeNotifier {
 
     // Only schedule if the time is in the future
     if (scheduledTime.isAfter(DateTime.now())) {
-      await _notificationService.scheduleNotification(
+      await _alarmService.scheduleAlarmNotification(
         id: notification.notificationId,
         title: notification.title,
         body: notification.description ?? 'Reminder: ${notification.title}',

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'providers/planner_provider.dart';
 import 'providers/notification_provider.dart';
-import 'services/notification_service.dart';
+import 'services/alarm_service.dart';
 import 'services/database_service.dart';
 
 void main() async {
@@ -18,7 +18,7 @@ void main() async {
   ]);
 
   await DatabaseService.instance.database;
-  await NotificationService.instance.initialize();
+  await AlarmService.instance.initialize();
 
   runApp(const MyApp());
 }

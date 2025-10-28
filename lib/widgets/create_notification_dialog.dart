@@ -143,8 +143,8 @@ class _CreateNotificationDialogState extends State<CreateNotificationDialog> {
             children: [
               Text(
                 widget.existingNotification != null
-                    ? 'Edit Notification'
-                    : 'Create Notification',
+                    ? 'Edit Alarm'
+                    : 'Create Alarm',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -375,7 +375,7 @@ class _CreateNotificationDialogState extends State<CreateNotificationDialog> {
               const Icon(Icons.save, size: 16),
               const SizedBox(width: 6),
               Text(
-                widget.existingNotification != null ? 'Update' : 'Create',
+                widget.existingNotification != null ? 'Update' : 'Schedule',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,

@@ -4,6 +4,7 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
+import '../../services/gallery_export_service.dart';
 
 class YearlyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -167,10 +168,12 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
     );
   }
 
-  Widget _buildMonthsGrid() {
+  Widget _buildMonthsGrid({bool capture = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: GridView.builder(
+        physics: capture ? const NeverScrollableScrollPhysics() : null,
+        shrinkWrap: capture,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           childAspectRatio: 1.2,
@@ -416,12 +419,50 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
   }
 
   void _saveToGallery() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Save to Gallery functionality will be implemented soon!'),
-        duration: Duration(seconds: 2),
-      ),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(const SnackBar(content: Text('Exporting image...')));
+
+    final result = await GalleryExportService.saveToGallery(
+      context: context,
+      fileName: '${widget.template.name}_$_selectedYear',
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.template.colors.first.withValues(alpha: 0.1),
+                widget.template.colors.last.withValues(alpha: 0.1),
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildYearHeader(),
+              const SizedBox(height: 16),
+              _buildMonthsGrid(capture: true),
+            ],
+          ),
+        );
+      },
+      pixelRatio: 3.0,
     );
+
+    scaffold.hideCurrentSnackBar();
+    if (!mounted) return;
+
+    if (result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved to gallery successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: ${result.error}')),
+      );
+    }
   }
 
   void _shareTemplate() async {
@@ -432,8 +473,6 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
       ),
     );
   }
-
-
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name

@@ -5,7 +5,7 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-
+import '../../services/gallery_export_service.dart';
 
 class MoodTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -148,28 +148,37 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
             ],
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              _buildDateSection(),
-                const SizedBox(height: 8),
-                _buildMoodSelector(),
-                const SizedBox(height: 8),
-                _buildMoodMetrics(),
-                const SizedBox(height: 8),
-                _buildActivitiesSection(),
-                const SizedBox(height: 8),
-                _buildTriggersSection(),
-                const SizedBox(height: 8),
-                _buildJournalSection(),
-                const SizedBox(height: 8),
-                _buildWellnessInsights(),
-              ],
-            ),
-          ),
-        ),
-      );
+        child: _buildMoodContent(),
+      ),
+    );
+  }
+
+  Widget _buildMoodContent({bool capture = false}) {
+    final inner = Padding(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        children: [
+          _buildDateSection(),
+          const SizedBox(height: 8),
+          _buildMoodSelector(),
+          const SizedBox(height: 8),
+          _buildMoodMetrics(),
+          const SizedBox(height: 8),
+          _buildActivitiesSection(),
+          const SizedBox(height: 8),
+          _buildTriggersSection(),
+          const SizedBox(height: 8),
+          _buildJournalSection(),
+          const SizedBox(height: 8),
+          _buildWellnessInsights(),
+        ],
+      ),
+    );
+
+    if (capture) {
+      return inner; // no scroll wrapper; let it expand to full height for capture
+    }
+    return SingleChildScrollView(child: inner);
   }
 
   Widget _buildDateSection() {
@@ -747,12 +756,44 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
   }
 
   void _saveToGallery() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Save to Gallery functionality will be implemented soon!'),
-        duration: Duration(seconds: 2),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(const SnackBar(content: Text('Exporting image...')));
+
+    final title =
+        '${widget.template.name} - ${DateFormat('yyyyMMdd').format(_selectedDate)}';
+
+    final result = await GalleryExportService.saveScrollableToGallery(
+      context: context,
+      fileName: title,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              widget.template.colors.first.withValues(alpha: 0.1),
+              widget.template.colors.last.withValues(alpha: 0.1),
+            ],
+          ),
+        ),
+        child: _buildMoodContent(capture: true),
       ),
+      pixelRatio: 3.0,
     );
+
+    scaffold.hideCurrentSnackBar();
+    if (!mounted) return;
+
+    if (result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved to gallery successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: ${result.error}')),
+      );
+    }
   }
 
   void _shareMoodReport() async {
@@ -763,8 +804,6 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
       ),
     );
   }
-
-
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name

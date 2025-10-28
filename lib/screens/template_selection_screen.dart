@@ -36,7 +36,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           child: Column(
             children: [
               _buildHeader(),
-              _buildSearchBar(),
+              // _buildSearchBar(),
               _buildFilters(),
               Expanded(child: _buildTemplateGrid()),
             ],
@@ -49,32 +49,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          // Drawer button
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            child: IconButton(
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-              icon: const Icon(Icons.menu),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF6366F1),
-                padding: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          // Title section
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
+      child: Text(
                   'Digital Planner',
                   style: TextStyle(
                     fontSize: 24,
@@ -82,25 +57,6 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                     color: Color.fromARGB(255, 8, 92, 210),
                   ),
                 ),
-              ],
-            ),
-          ),
-          // Container(
-          //   padding: const EdgeInsets.all(12),
-          //   decoration: BoxDecoration(
-          //     color: Colors.white,
-          //     borderRadius: BorderRadius.circular(12),
-          //     boxShadow: [
-          //       BoxShadow(
-          //         color: Colors.black.withValues(alpha: 0.05),
-          //         blurRadius: 10,
-          //       ),
-          //     ],
-          //   ),
-          //   child: const Icon(Icons.palette_outlined, color: Color(0xFF6366F1)),
-          // ),
-        ],
-      ),
     );
   }
 

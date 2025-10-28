@@ -129,19 +129,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _shareApp,
           ),
           _buildDivider(),
-          _buildSettingsItem(
-            icon: Icons.alarm_outlined,
-            title: 'Test Alarm',
-            subtitle: 'Test alarm functionality',
-            onTap: _testAlarm,
-          ),
-          _buildDivider(),
-          // _buildSettingsItem(
-          //   icon: Icons.notifications_outlined,
-          //   title: 'Notification Permissions',
-          //   subtitle: 'Check notification settings',
-          //   onTap: _checkNotificationPermissions,
-          // ),
         ],
       ),
     );
@@ -207,52 +194,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'Download now and start organizing your life better!',
       subject: 'Digital Planner App - Get Organized!',
     );
-  }
-
-  void _testAlarm() async {
-    try {
-      // Show confirmation dialog
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Test Alarm'),
-          content: const Text(
-            'This will trigger a test alarm that will ring for 10 seconds. '
-            'You can stop it early by tapping the notification or it will auto-stop.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Start Test'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirm == true) {
-        // await AlarmService.instance.testAlarm();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Test alarm started! It will ring for 10 seconds.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to start test alarm: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 }

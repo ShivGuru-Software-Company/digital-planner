@@ -336,12 +336,12 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
                     ),
 
                     const PopupMenuItem(
-                      value: 'export_pdf',
+                      value: 'save_gallery',
                       child: Row(
                         children: [
-                          Icon(Icons.picture_as_pdf, size: 16),
+                          Icon(Icons.image, size: 16),
                           SizedBox(width: 8),
-                          Text('Export as PDF'),
+                          Text('Save to Gallery'),
                         ],
                       ),
                     ),
@@ -382,8 +382,8 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
         _openTemplate(template);
         break;
 
-      case 'export_pdf':
-        _exportAsPDF(template);
+      case 'save_gallery':
+        _saveToGallery(template);
         break;
       case 'share':
         _shareTemplate(template);
@@ -496,7 +496,7 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
     }
   }
 
-  void _exportAsPDF(SavedTemplateModel template) async {
+  void _saveToGallery(SavedTemplateModel template) async {
     try {
       // Show loading indicator
       showDialog(
@@ -509,7 +509,7 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✨ New PDF Export Available! \nOpen this template and use the "Export as PDF" button for high-quality PDF export.'),
+            content: Text('Save to Gallery functionality will be implemented soon!'),
             duration: Duration(seconds: 5),
             backgroundColor: Colors.deepPurple,
           ),
@@ -520,7 +520,7 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error exporting PDF: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error saving to gallery: $e')));
       }
     }
   }

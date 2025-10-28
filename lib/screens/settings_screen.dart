@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'about_screen.dart';
 import 'privacy_policy_screen.dart';
-import '../services/alarm_service.dart';
+
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -28,14 +28,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               // Header
               _buildHeader(),
-              
+
               // Settings Options
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(16),
-                  children: [
-                    _buildSettingsCard(),
-                  ],
+                  children: [_buildSettingsCard()],
                 ),
               ),
             ],
@@ -64,11 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(
-              Icons.settings,
-              size: 40,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.settings, size: 40, color: Colors.white),
           ),
           const SizedBox(height: 16),
           // Title
@@ -82,10 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Text(
             'Manage your app preferences',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
         ],
       ),
@@ -126,9 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const PrivacyPolicyScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
               );
             },
           ),
@@ -147,12 +136,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _testAlarm,
           ),
           _buildDivider(),
-          _buildSettingsItem(
-            icon: Icons.notifications_outlined,
-            title: 'Notification Permissions',
-            subtitle: 'Check notification settings',
-            onTap: _checkNotificationPermissions,
-          ),
+          // _buildSettingsItem(
+          //   icon: Icons.notifications_outlined,
+          //   title: 'Notification Permissions',
+          //   subtitle: 'Check notification settings',
+          //   onTap: _checkNotificationPermissions,
+          // ),
         ],
       ),
     );
@@ -184,10 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          fontSize: 14,
-          color: Color(0xFF6B7280),
-        ),
+        style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
       ),
       trailing: const Icon(
         Icons.arrow_forward_ios,
@@ -216,7 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       '📅 Multiple template types (Daily, Weekly, Monthly, Yearly)\n'
       '📝 Rich text editing and drawing capabilities\n'
       '🔔 Smart alarms and notifications\n'
-      '📄 High-quality PDF export\n'
+      '� Save to gallery\n'
       '💾 Offline storage - your data stays private\n\n'
       'Download now and start organizing your life better!',
       subject: 'Digital Planner App - Get Organized!',
@@ -248,7 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (confirm == true) {
-        await AlarmService.instance.testAlarm();
+        // await AlarmService.instance.testAlarm();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -263,59 +249,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to start test alarm: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void _checkNotificationPermissions() async {
-    try {
-      final canSchedule = await AlarmService.instance.canScheduleExactNotifications();
-      final pendingNotifications = await AlarmService.instance.getPendingNotifications();
-      
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Notification Status'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Exact Alarms: ${canSchedule ? "✅ Enabled" : "❌ Disabled"}',
-                  style: TextStyle(
-                    color: canSchedule ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text('Pending Notifications: ${pendingNotifications.length}'),
-                const SizedBox(height: 16),
-                if (!canSchedule)
-                  const Text(
-                    'Exact alarms are disabled. Some alarm features may not work properly. '
-                    'Please enable "Alarms & reminders" permission in your device settings.',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error checking permissions: $e'),
             backgroundColor: Colors.red,
           ),
         );

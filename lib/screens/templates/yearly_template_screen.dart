@@ -4,7 +4,6 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../widgets/pdf_capture_wrapper.dart';
 
 class YearlyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -20,7 +19,7 @@ class YearlyTemplateScreen extends StatefulWidget {
   State<YearlyTemplateScreen> createState() => _YearlyTemplateScreenState();
 }
 
-class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> with PdfExportMixin {
+class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> {
   late int _selectedYear;
   final Map<int, TextEditingController> _monthControllers = {};
   final Map<int, String> _monthNotes = {};
@@ -106,13 +105,11 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> with PdfExp
             ],
           ),
         ),
-        child: buildPdfCapturableContent(
-          Column(
-            children: [
-              _buildYearHeader(),
-              Expanded(child: _buildMonthsGrid()),
-            ],
-          ),
+        child: Column(
+          children: [
+            _buildYearHeader(),
+            Expanded(child: _buildMonthsGrid()),
+          ],
         ),
       ),
     );
@@ -397,11 +394,11 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> with PdfExp
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf),
-              title: const Text('Export as PDF'),
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Save to Gallery'),
               onTap: () {
                 Navigator.pop(context);
-                _exportAsPDF();
+                _saveToGallery();
               },
             ),
             ListTile(
@@ -418,32 +415,25 @@ class _YearlyTemplateScreenState extends State<YearlyTemplateScreen> with PdfExp
     );
   }
 
-  void _exportAsPDF() async {
-    final templateName = widget.template.name + ' - ${_selectedYear}';
-    await exportTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Yearly',
-      isScrollable: false,
+  void _saveToGallery() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Save to Gallery functionality will be implemented soon!'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
   void _shareTemplate() async {
-    final templateName = widget.template.name + ' - ${_selectedYear}';
-    await shareTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Yearly',
-      isScrollable: false,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Share functionality will be implemented soon!'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
-  Map<String, dynamic> _collectTemplateData() {
-    return {
-      'selectedYear': _selectedYear,
-      'monthNotes': Map.fromEntries(
-        _monthNotes.entries.map((e) => MapEntry(e.key.toString(), e.value)),
-      ),
-    };
-  }
+
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name

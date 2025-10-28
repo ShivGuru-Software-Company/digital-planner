@@ -95,7 +95,7 @@ class AboutScreen extends StatelessWidget {
                         _buildFeature('Offline functionality'),
                         _buildFeature('Drawing and note-taking'),
                         _buildFeature('Image insertion'),
-                        _buildFeature('PDF export'),
+                        _buildFeature('Gallery save'),
                         _buildFeature('Calendar integration'),
                         _buildFeature('Reminders and notifications'),
                         _buildFeature('Customizable templates'),

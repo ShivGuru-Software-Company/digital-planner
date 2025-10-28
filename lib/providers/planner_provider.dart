@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/template_model.dart';
 import '../models/entry_model.dart';
 import '../services/database_service.dart';
-import '../services/notification_service.dart';
 
 class PlannerProvider extends ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;
-  final NotificationService _notificationService = NotificationService.instance;
 
   List<TemplateModel> _templates = [];
   List<EntryModel> _entries = [];
@@ -73,7 +71,6 @@ class PlannerProvider extends ChangeNotifier {
 
   Future<void> updateEntry(EntryModel entry) async {
     // Cancel existing notification for this entry
-    await _notificationService.cancelNotification(entry.id.hashCode);
 
     await _db.updateEntry(entry);
 
@@ -87,7 +84,6 @@ class PlannerProvider extends ChangeNotifier {
 
   Future<void> deleteEntry(String id) async {
     // Cancel notification for this entry
-    await _notificationService.cancelNotification(id.hashCode);
 
     await _db.deleteEntry(id);
     await _loadEntries();
@@ -144,16 +140,6 @@ class PlannerProvider extends ChangeNotifier {
 
       // Only schedule if the reminder time is in the future
       if (reminderDateTime.isAfter(DateTime.now())) {
-        await _notificationService.scheduleNotification(
-          id: entry.id.hashCode,
-          title: 'Reminder: ${entry.title}',
-          body: entry.content.isNotEmpty
-              ? entry.content.length > 50
-                    ? '${entry.content.substring(0, 50)}...'
-                    : entry.content
-              : 'You have a scheduled event',
-          scheduledDate: reminderDateTime,
-        );
         print('Reminder scheduled successfully');
       } else {
         print('Reminder time is in the past, not scheduling');

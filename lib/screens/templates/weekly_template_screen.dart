@@ -5,7 +5,6 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../widgets/pdf_capture_wrapper.dart';
 
 class WeeklyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -21,7 +20,7 @@ class WeeklyTemplateScreen extends StatefulWidget {
   State<WeeklyTemplateScreen> createState() => _WeeklyTemplateScreenState();
 }
 
-class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> with PdfExportMixin {
+class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
   late DateTime _weekStartDate;
   late DateTime _weekEndDate;
   final Map<String, List<TextEditingController>> _dayControllers = {};
@@ -122,13 +121,11 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> with PdfExp
             ],
           ),
         ),
-        child: buildPdfCapturableContent(
-          Column(
-            children: [
-              _buildWeekHeader(),
-              Expanded(child: _buildWeekGrid()),
-            ],
-          ),
+        child: Column(
+          children: [
+            _buildWeekHeader(),
+            Expanded(child: _buildWeekGrid()),
+          ],
         ),
       ),
     );
@@ -328,11 +325,11 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> with PdfExp
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf),
-              title: const Text('Export as PDF'),
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Save to Gallery'),
               onTap: () {
                 Navigator.pop(context);
-                _exportAsPDF();
+                _saveToGallery();
               },
             ),
             ListTile(
@@ -349,44 +346,27 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> with PdfExp
     );
   }
 
-  void _exportAsPDF() async {
-    final templateName = widget.template.name + ' - Week ${_getWeekOfYear()}';
-    await exportTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Weekly',
-      isScrollable: true,
+  void _saveToGallery() async {
+    // TODO: Implement save to gallery functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Save to Gallery functionality will be implemented soon!'),
+        backgroundColor: Colors.blue,
+      ),
     );
-  }
-  
-  int _getWeekOfYear() {
-    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
-    return ((dayOfYear - DateTime.now().weekday + 10) / 7).floor();
   }
 
   void _shareTemplate() async {
-    final templateName = widget.template.name + ' - Week ${_getWeekOfYear()}';
-    await shareTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Weekly',
-      isScrollable: true,
+    // TODO: Implement share template functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Share Template functionality will be implemented soon!'),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 
-  Map<String, dynamic> _collectTemplateData() {
-    final data = <String, dynamic>{
-      'weekStartDate': _weekStartDate.toIso8601String(),
-      'weekEndDate': _weekEndDate.toIso8601String(),
-    };
 
-    for (String day in _weekDays) {
-      data[day] = {
-        'tasks': _dayControllers[day]!.map((c) => c.text).toList(),
-        'status': _dayCheckboxes[day],
-      };
-    }
-
-    return data;
-  }
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name

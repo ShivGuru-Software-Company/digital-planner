@@ -5,7 +5,6 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../widgets/pdf_capture_wrapper.dart';
 
 class MonthlyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -21,7 +20,7 @@ class MonthlyTemplateScreen extends StatefulWidget {
   State<MonthlyTemplateScreen> createState() => _MonthlyTemplateScreenState();
 }
 
-class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> with PdfExportMixin {
+class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> {
   late DateTime _selectedMonth;
   final Map<int, TextEditingController> _dayControllers = {};
   final Map<int, String> _dayNotes = {};
@@ -99,14 +98,12 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> with PdfE
             ],
           ),
         ),
-        child: buildPdfCapturableContent(
-          Column(
-            children: [
-              _buildMonthHeader(),
-              _buildWeekDaysHeader(),
-              Expanded(child: _buildCalendarGrid()),
-            ],
-          ),
+        child: Column(
+          children: [
+            _buildMonthHeader(),
+            _buildWeekDaysHeader(),
+            Expanded(child: _buildCalendarGrid()),
+          ],
         ),
       ),
     );
@@ -424,11 +421,11 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> with PdfE
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf),
-              title: const Text('Export as PDF'),
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Save to Gallery'),
               onTap: () {
                 Navigator.pop(context);
-                _exportAsPDF();
+                _saveToGallery();
               },
             ),
             ListTile(
@@ -445,32 +442,27 @@ class _MonthlyTemplateScreenState extends State<MonthlyTemplateScreen> with PdfE
     );
   }
 
-  void _exportAsPDF() async {
-    final templateName = widget.template.name + ' - ${DateFormat('MMM yyyy').format(_selectedMonth)}';
-    await exportTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Monthly',
-      isScrollable: true,
+  void _saveToGallery() async {
+    // TODO: Implement save to gallery functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Save to Gallery functionality will be implemented soon!'),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 
   void _shareTemplate() async {
-    final templateName = widget.template.name + ' - ${DateFormat('MMM yyyy').format(_selectedMonth)}';
-    await shareTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Monthly',
-      isScrollable: true,
+    // TODO: Implement share template functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Share Template functionality will be implemented soon!'),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 
-  Map<String, dynamic> _collectTemplateData() {
-    return {
-      'selectedMonth': _selectedMonth.toIso8601String(),
-      'dayNotes': Map.fromEntries(
-        _dayNotes.entries.map((e) => MapEntry(e.key.toString(), e.value)),
-      ),
-    };
-  }
+
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name

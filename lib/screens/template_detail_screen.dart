@@ -72,7 +72,7 @@ class TemplateDetailScreen extends StatelessWidget {
       'Create and edit entries',
       'Add drawings and images',
       'Set reminders',
-      'Export as multi-page PDF',
+      'Save to gallery',
       'Fully customizable',
     ];
 

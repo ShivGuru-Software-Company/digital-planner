@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../providers/planner_provider.dart';
-import '../providers/notification_provider.dart';
+import '../providers/alarm_provider.dart';
 import '../models/entry_model.dart';
 import '../models/notification_model.dart';
 import '../widgets/glass_card.dart';
@@ -27,10 +27,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     super.initState();
     // Load notifications when the screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotificationProvider>(
-        context,
-        listen: false,
-      ).loadNotifications();
+      Provider.of<AlarmProvider>(context, listen: false).loadAlarms();
     });
   }
 
@@ -53,7 +50,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateNotificationDialog(),
+        onPressed: () => _showCreateAlarmDialog(),
         backgroundColor: const Color(0xFF6366F1),
         tooltip: 'Create Alarm',
         child: const Icon(Icons.alarm_add, color: Colors.white),
@@ -110,18 +107,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
               context,
               listen: false,
             );
-            final notificationProvider = Provider.of<NotificationProvider>(
+            final alarmProvider = Provider.of<AlarmProvider>(
               context,
               listen: false,
             );
 
             final entries = plannerProvider.getEntriesForDate(day);
-            final notifications = notificationProvider.getNotificationsForDate(
-              day,
-            );
+            final alarms = alarmProvider.getAlarmsForDate(day);
 
-            // Combine entries and notifications for event markers
-            return [...entries, ...notifications];
+            // Combine entries and alarms for event markers
+            return [...entries, ...alarms];
           },
         ),
       ),
@@ -129,14 +124,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildContentList() {
-    return Consumer2<PlannerProvider, NotificationProvider>(
-      builder: (context, plannerProvider, notificationProvider, child) {
+    return Consumer2<PlannerProvider, AlarmProvider>(
+      builder: (context, plannerProvider, alarmProvider, child) {
         final entries = plannerProvider.getEntriesForDate(_selectedDay);
-        final notifications = notificationProvider.getNotificationsForDate(
-          _selectedDay,
-        );
+        final alarms = alarmProvider.getAlarmsForDate(_selectedDay);
 
-        if (entries.isEmpty && notifications.isEmpty) {
+        if (entries.isEmpty && alarms.isEmpty) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Center(
@@ -164,13 +157,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'No entries or notifications for this date',
+                    'No entries or alarms for this date',
                     style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Tap the + button to create a notification',
+                    'Tap the + button to create an alarm',
                     style: TextStyle(fontSize: 11, color: Colors.grey[400]),
                     textAlign: TextAlign.center,
                   ),
@@ -182,16 +175,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         return ListView.builder(
           padding: const EdgeInsets.all(20),
-          itemCount: entries.length + notifications.length,
+          itemCount: entries.length + alarms.length,
           itemBuilder: (context, index) {
             if (index < entries.length) {
               return _buildEntryCard(context, entries[index]);
             } else {
-              final notificationIndex = index - entries.length;
-              return _buildNotificationCard(
-                context,
-                notifications[notificationIndex],
-              );
+              final alarmIndex = index - entries.length;
+              return _buildAlarmCard(context, alarms[alarmIndex]);
             }
           },
         );
@@ -292,19 +282,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildNotificationCard(
-    BuildContext context,
-    NotificationModel notification,
-  ) {
+  Widget _buildAlarmCard(BuildContext context, NotificationModel alarm) {
     final isOverdue =
-        notification.scheduledDateTime.isBefore(DateTime.now()) &&
-        !notification.isCompleted;
-    final isCompleted = notification.isCompleted;
+        alarm.scheduledDateTime.isBefore(DateTime.now()) && !alarm.isCompleted;
+    final isCompleted = alarm.isCompleted;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
-        onTap: () => _showNotificationOptions(notification),
+        onTap: () => _showAlarmOptions(alarm),
         child: GlassCard(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -341,14 +327,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            notification.title,
-                            style: TextStyle(
+                            alarm.title,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1F2937),
-                              decoration: isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : null,
+                              color: Color(0xFF1F2937),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -362,7 +345,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               const SizedBox(width: 4),
                               Text(
                                 TimeOfDay.fromDateTime(
-                                  notification.time,
+                                  alarm.time,
                                 ).format(context),
                                 style: TextStyle(
                                   fontSize: 12,
@@ -417,10 +400,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                     ),
                     PopupMenuButton<String>(
-                      onSelected: (value) =>
-                          _handleNotificationAction(value, notification),
+                      onSelected: (value) => _handleAlarmAction(value, alarm),
                       itemBuilder: (context) => [
-                        if (!notification.isCompleted)
+                        if (!alarm.isCompleted)
                           const PopupMenuItem(
                             value: 'complete',
                             child: Row(
@@ -458,18 +440,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ),
                   ],
                 ),
-                if (notification.description != null &&
-                    notification.description!.isNotEmpty) ...[
+                if (alarm.description != null &&
+                    alarm.description!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
-                    notification.description!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      decoration: isCompleted
-                          ? TextDecoration.lineThrough
-                          : null,
-                    ),
+                    alarm.description!,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ],
@@ -480,7 +456,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  void _showCreateNotificationDialog() {
+  void _showCreateAlarmDialog() {
     Navigator.of(context)
         .push(
           PageRouteBuilder(
@@ -495,18 +471,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
         )
         .then((result) {
           if (result != null && result is NotificationModel) {
-            _createNotification(result);
+            _createAlarm(result);
           }
         });
   }
 
-  void _showNotificationOptions(NotificationModel notification) {
+  void _showAlarmOptions(NotificationModel alarm) {
     Navigator.of(context)
         .push(
           PageRouteBuilder(
             opaque: false,
             pageBuilder: (context, animation, secondaryAnimation) =>
-                CreateNotificationDialog(existingNotification: notification),
+                CreateNotificationDialog(existingNotification: alarm),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return FadeTransition(opacity: animation, child: child);
@@ -515,31 +491,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
         )
         .then((result) {
           if (result != null && result is NotificationModel) {
-            _updateNotification(result);
+            _updateAlarm(result);
           }
         });
   }
 
-  Future<void> _createNotification(NotificationModel notification) async {
+  Future<void> _createAlarm(NotificationModel notification) async {
     try {
       print('Creating notification: ${notification.title}');
       print('Scheduled for: ${notification.scheduledDateTime}');
 
-      final notificationProvider = Provider.of<NotificationProvider>(
-        context,
-        listen: false,
-      );
+      final alarmProvider = Provider.of<AlarmProvider>(context, listen: false);
 
-      final success = await notificationProvider.createNotification(
-        notification,
-      );
+      final success = await alarmProvider.createAlarm(notification);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               success
-                  ? 'Alarm scheduled successfully!'
+                  ? 'Notification scheduled successfully!'
                   : 'Failed to schedule alarm',
             ),
             backgroundColor: success ? Colors.green : Colors.red,
@@ -547,7 +518,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         );
       }
     } catch (e) {
-      print('Error in _createNotification: $e');
+      print('Error in _createAlarm: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -559,21 +530,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  Future<void> _updateNotification(NotificationModel notification) async {
-    final notificationProvider = Provider.of<NotificationProvider>(
-      context,
-      listen: false,
+  Future<void> _updateAlarm(NotificationModel alarm) async {
+    final alarmProvider = Provider.of<AlarmProvider>(context, listen: false);
+
+    // Reset completion status when editing - if the alarm is rescheduled, it should be active again
+    final updatedAlarm = alarm.copyWith(
+      isCompleted: false,
+      updatedAt: DateTime.now(),
     );
 
-    final success = await notificationProvider.updateNotification(notification);
+    final success = await alarmProvider.updateAlarm(updatedAlarm);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success
-                ? 'Notification updated successfully!'
-                : 'Failed to update notification',
+            success ? 'Notification updated successfully!' : 'Failed to update notification',
           ),
           backgroundColor: success ? Colors.green : Colors.red,
         ),
@@ -581,38 +553,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  void _handleNotificationAction(
-    String action,
-    NotificationModel notification,
-  ) {
+  void _handleAlarmAction(String action, NotificationModel alarm) {
     switch (action) {
       case 'complete':
-        _markNotificationComplete(notification);
+        _markAlarmComplete(alarm);
         break;
       case 'edit':
-        _showNotificationOptions(notification);
+        _showAlarmOptions(alarm);
         break;
       case 'delete':
-        _deleteNotification(notification);
+        _deleteAlarm(alarm);
         break;
     }
   }
 
-  Future<void> _markNotificationComplete(NotificationModel notification) async {
-    final notificationProvider = Provider.of<NotificationProvider>(
-      context,
-      listen: false,
-    );
+  Future<void> _markAlarmComplete(NotificationModel alarm) async {
+    final alarmProvider = Provider.of<AlarmProvider>(context, listen: false);
 
-    final success = await notificationProvider.markAsCompleted(notification.id);
+    final success = await alarmProvider.markAsCompleted(alarm.id);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success
-                ? 'Notification marked as completed!'
-                : 'Failed to update notification',
+            success ? 'Notification marked as completed!' : 'Failed to update noitification',
           ),
           backgroundColor: success ? Colors.green : Colors.red,
         ),
@@ -620,14 +584,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  Future<void> _deleteNotification(NotificationModel notification) async {
+  Future<void> _deleteAlarm(NotificationModel alarm) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Notification'),
-        content: Text(
-          'Are you sure you want to delete "${notification.title}"?',
-        ),
+        title: const Text('Delete Alarm'),
+        content: Text('Are you sure you want to delete "${alarm.title}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -642,14 +604,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
 
     if (confirmed == true) {
-      final notificationProvider = Provider.of<NotificationProvider>(
-        context,
-        listen: false,
-      );
+      final alarmProvider = Provider.of<AlarmProvider>(context, listen: false);
 
-      final success = await notificationProvider.deleteNotification(
-        notification.id,
-      );
+      final success = await alarmProvider.deleteAlarm(alarm.id);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

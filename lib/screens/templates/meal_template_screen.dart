@@ -5,7 +5,7 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../widgets/pdf_capture_wrapper.dart';
+
 
 class MealTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -21,7 +21,7 @@ class MealTemplateScreen extends StatefulWidget {
   State<MealTemplateScreen> createState() => _MealTemplateScreenState();
 }
 
-class _MealTemplateScreenState extends State<MealTemplateScreen> with PdfExportMixin {
+class _MealTemplateScreenState extends State<MealTemplateScreen> {
   late DateTime _selectedDate;
 
   // Meal controllers
@@ -148,12 +148,11 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> with PdfExportM
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(8),
-          child: buildPdfCapturableContent(
-            Column(
-              children: [
-                _buildDateSection(),
-                const SizedBox(height: 8),
-                _buildNutritionOverview(),
+          child: Column(
+            children: [
+              _buildDateSection(),
+              const SizedBox(height: 8),
+              _buildNutritionOverview(),
               const SizedBox(height: 8),
               _buildWaterTracker(),
               const SizedBox(height: 8),
@@ -165,8 +164,7 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> with PdfExportM
                   ],
                 ),
               ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -668,11 +666,11 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> with PdfExportM
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf),
-              title: const Text('Export as PDF'),
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Save to Gallery'),
               onTap: () {
                 Navigator.pop(context);
-                _exportAsPDF();
+                _saveToGallery();
               },
             ),
             ListTile(
@@ -689,42 +687,27 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> with PdfExportM
     );
   }
 
-  void _exportAsPDF() async {
-    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
-    await exportTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Meal',
-      isScrollable: true,
+  void _saveToGallery() async {
+    // TODO: Implement save to gallery functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Save to Gallery functionality will be implemented soon!'),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 
   void _shareMealPlan() async {
-    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
-    await shareTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Meal',
-      isScrollable: true,
+    // TODO: Implement share template functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Share Template functionality will be implemented soon!'),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 
-  Map<String, dynamic> _collectTemplateData() {
-    final data = {
-      'selectedDate': _selectedDate.toIso8601String(),
-      'waterIntake': _waterIntake,
-      'totalCalories': _totalCalories,
-    };
 
-    // Add meal data
-    for (String mealType in _mealTypes) {
-      data[mealType] = {
-        'meal': _mealControllers[mealType]!.text,
-        'calories': _caloriesData[mealType] ?? 0,
-        'ingredients': _ingredientsData[mealType] ?? [],
-      };
-    }
-
-    return data;
-  }
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name

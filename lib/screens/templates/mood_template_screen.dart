@@ -5,7 +5,7 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-import '../../widgets/pdf_capture_wrapper.dart';
+
 
 class MoodTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -21,7 +21,7 @@ class MoodTemplateScreen extends StatefulWidget {
   State<MoodTemplateScreen> createState() => _MoodTemplateScreenState();
 }
 
-class _MoodTemplateScreenState extends State<MoodTemplateScreen> with PdfExportMixin {
+class _MoodTemplateScreenState extends State<MoodTemplateScreen> {
   late DateTime _selectedDate;
 
   // Mood tracking
@@ -150,10 +150,9 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> with PdfExportM
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(8),
-          child: buildPdfCapturableContent(
-            Column(
-              children: [
-                _buildDateSection(),
+          child: Column(
+            children: [
+              _buildDateSection(),
                 const SizedBox(height: 8),
                 _buildMoodSelector(),
                 const SizedBox(height: 8),
@@ -170,8 +169,7 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> with PdfExportM
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildDateSection() {
@@ -727,11 +725,11 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> with PdfExportM
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf),
-              title: const Text('Export as PDF'),
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Save to Gallery'),
               onTap: () {
                 Navigator.pop(context);
-                _exportAsPDF();
+                _saveToGallery();
               },
             ),
             ListTile(
@@ -748,40 +746,25 @@ class _MoodTemplateScreenState extends State<MoodTemplateScreen> with PdfExportM
     );
   }
 
-  void _exportAsPDF() async {
-    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
-    await exportTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Mood',
-      isScrollable: true,
+  void _saveToGallery() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Save to Gallery functionality will be implemented soon!'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
   void _shareMoodReport() async {
-    final templateName = widget.template.name + ' - ${DateFormat('MMM dd, yyyy').format(_selectedDate)}';
-    await shareTemplateToPdf(
-      templateName: templateName,
-      templateType: 'Mood',
-      isScrollable: true,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Share functionality will be implemented soon!'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
-  Map<String, dynamic> _collectTemplateData() {
-    return {
-      'selectedDate': _selectedDate.toIso8601String(),
-      'selectedMood': _selectedMood,
-      'moodIntensity': _moodIntensity,
-      'energyLevel': _energyLevel,
-      'stressLevel': _stressLevel,
-      'sleepQuality': _sleepQuality,
-      'thoughts': _thoughtsController.text,
-      'gratitude': _gratitudeController.text,
-      'goals': _goalsController.text,
-      'reflection': _reflectionController.text,
-      'activities': _selectedActivities,
-      'triggers': _selectedTriggers,
-    };
-  }
+
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name

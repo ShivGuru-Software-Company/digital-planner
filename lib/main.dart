@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'providers/planner_provider.dart';
-import 'providers/notification_provider.dart';
+import 'providers/alarm_provider.dart';
 import 'services/alarm_service.dart';
 import 'services/database_service.dart';
 
@@ -18,7 +18,7 @@ void main() async {
   ]);
 
   await DatabaseService.instance.database;
-  await AlarmService.instance.initialize();
+  await NotificationService.instance.initialize();
 
   runApp(const MyApp());
 }
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => PlannerProvider()),
-        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => AlarmProvider()),
       ],
       child: MaterialApp(
         title: 'Digital Planner',

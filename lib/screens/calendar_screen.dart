@@ -4,11 +4,9 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../providers/planner_provider.dart';
 import '../providers/alarm_provider.dart';
-import '../models/entry_model.dart';
 import '../models/notification_model.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/create_notification_dialog.dart';
-import 'entry_editor_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -177,108 +175,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
           padding: const EdgeInsets.all(20),
           itemCount: entries.length + alarms.length,
           itemBuilder: (context, index) {
-            if (index < entries.length) {
-              return _buildEntryCard(context, entries[index]);
-            } else {
-              final alarmIndex = index - entries.length;
+            final alarmIndex = index - entries.length;
               return _buildAlarmCard(context, alarms[alarmIndex]);
-            }
           },
         );
       },
-    );
-  }
-
-  Widget _buildEntryCard(BuildContext context, EntryModel entry) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => EntryEditorScreen(entry: entry)),
-        );
-      },
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      entry.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                  ),
-                  if (entry.reminderTime != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEC4899).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.notifications_active,
-                            size: 14,
-                            color: Color(0xFFEC4899),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'Reminder',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFFEC4899),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                entry.content,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-              if (entry.images.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 60,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: entry.images.length,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        width: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.grey[200],
-                        ),
-                        child: const Icon(Icons.image),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
     );
   }
 

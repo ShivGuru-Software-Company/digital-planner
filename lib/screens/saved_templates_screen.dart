@@ -323,37 +323,6 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleMenuAction(value, template),
                   itemBuilder: (context) => [
-                    // const PopupMenuItem(
-                    //   value: 'edit',
-                    //   child: Row(
-                    //     children: [
-                    //       Icon(Icons.edit, size: 16),
-                    //       SizedBox(width: 8),
-                    //       Text('Edit'),
-                    //     ],
-                    //   ),
-                    // ),
-
-                    // const PopupMenuItem(
-                    //   value: 'save_gallery',
-                    //   child: Row(
-                    //     children: [
-                    //       Icon(Icons.image, size: 16),
-                    //       SizedBox(width: 8),
-                    //       Text('Save to Gallery'),
-                    //     ],
-                    //   ),
-                    // ),
-                    // const PopupMenuItem(
-                    //   value: 'share',
-                    //   child: Row(
-                    //     children: [
-                    //       Icon(Icons.share, size: 16),
-                    //       SizedBox(width: 8),
-                    //       Text('Share'),
-                    //     ],
-                    //   ),
-                    // ),
                     const PopupMenuItem(
                       value: 'delete',
                       child: Row(

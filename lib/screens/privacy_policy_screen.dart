@@ -45,13 +45,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     ),
                     _buildSection(
                       'Data Storage',
-                      'All data is stored locally on your device using secure local storage methods. '
-                          'Your data includes:\n\n'
-                          '• Journal entries and notes\n'
-                          '• Templates and customizations\n'
-                          '• Drawings and images\n'
-                          '• App settings and preferences\n\n'
-                          'This data remains on your device and is never transmitted to our servers or any third parties.',
+                      'All data is stored locally on your device using secure local storage methods and never transmitted to our servers or any third parties.',
                     ),
                     _buildSection(
                       'Data Access',
@@ -66,8 +60,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     _buildSection(
                       'Permissions',
                       'The app may request the following permissions:\n\n'
-                          '• Storage: To save your entries, images, and backups locally\n'
-                          '• Camera/Gallery: To add images to your entries (optional)\n'
+                          '• Storage: To save your entries, images locally\n'
+                          '• Gallery: To add images to your entries (optional)\n'
                           '• Notifications: To send you reminders for your tasks and entries\n\n'
                           'These permissions are used solely for app functionality and do not involve data transmission.',
                     ),
@@ -83,13 +77,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     ),
                     _buildSection(
                       'Changes to Privacy Policy',
-                      'We may update this Privacy Policy from time to time. Any changes will be reflected '
-                          'in the app with an updated "Last updated" date.',
-                    ),
-                    _buildSection(
-                      'Contact Us',
-                      'If you have any questions about this Privacy Policy, please contact us at:\n\n'
-                          'Email: privacy@digitalplanner.com',
+                      'We may update this Privacy Policy from time to time.',
                     ),
                     const SizedBox(height: 24),
                     Container(

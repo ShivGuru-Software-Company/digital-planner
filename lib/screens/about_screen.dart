@@ -74,10 +74,11 @@ class AboutScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         Text(
                           'Digital Planner is your comprehensive offline journal and planning companion. '
-                          'With over 100+ pre-designed templates, you can organize your daily tasks, '
-                          'track your moods, plan your meals, manage your finances, and much more.\n\n'
+                          'With over pre-designed templates, you can organize your daily, weekly, monthly as well as yearly tasks, '
+                          'track your moods, plan your meals, and much more.\n\n'
                           'All your data is stored securely on your device, ensuring complete privacy '
                           'and offline access. No subscriptions, no ads - just a pure planning experience.',
+                          textAlign: TextAlign.justify,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[700],
@@ -103,48 +104,17 @@ class AboutScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        _buildFeature('100+ pre-designed templates'),
+                        _buildFeature('Pre-designed templates'),
                         _buildFeature('Offline functionality'),
-                        _buildFeature('Drawing and note-taking'),
-                        _buildFeature('Image insertion'),
                         _buildFeature('Gallery save'),
                         _buildFeature('Calendar integration'),
                         _buildFeature('Reminders and notifications'),
-                        _buildFeature('Customizable templates'),
-                        _buildFeature('Multiple languages'),
-                        _buildFeature('No ads or subscriptions'),
+                        _buildFeature('No ads and subscriptions'),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                GlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Contact Us',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildContactInfo(
-                          Icons.email,
-                          'support@digitalplanner.com',
-                        ),
-                        _buildContactInfo(
-                          Icons.language,
-                          'www.digitalplanner.com',
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 Text(
                   '© 2025 Digital Planner. All rights reserved.',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
@@ -166,19 +136,6 @@ class AboutScreen extends StatelessWidget {
           const Icon(Icons.check_circle, size: 20, color: Color(0xFF6366F1)),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactInfo(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: const Color(0xFF6366F1)),
-          const SizedBox(width: 12),
-          Text(text, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );

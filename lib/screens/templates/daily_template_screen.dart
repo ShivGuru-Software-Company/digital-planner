@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
@@ -5,6 +6,8 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
+import '../../services/gallery_export_service.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DailyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -180,20 +183,20 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
             return SingleChildScrollView(
               padding: const EdgeInsets.all(8),
               child: Column(
-                  children: [
-                    _buildDateSection(),
-                    const SizedBox(height: 8),
-                    _buildWeatherSection(),
-                    const SizedBox(height: 8),
-                    _buildPrioritiesSection(),
-                    const SizedBox(height: 8),
-                    _buildFinanceSection(),
-                    const SizedBox(height: 8),
-                    _buildWaterTrackerSection(),
-                    const SizedBox(height: 8),
-                    _buildScheduleSection(),
-                  ],
-                ),
+                children: [
+                  _buildDateSection(),
+                  const SizedBox(height: 8),
+                  _buildWeatherSection(),
+                  const SizedBox(height: 8),
+                  _buildPrioritiesSection(),
+                  const SizedBox(height: 8),
+                  _buildFinanceSection(),
+                  const SizedBox(height: 8),
+                  _buildWaterTrackerSection(),
+                  const SizedBox(height: 8),
+                  _buildScheduleSection(),
+                ],
+              ),
             );
           },
         ),
@@ -631,23 +634,84 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
   }
 
   void _saveToGallery() async {
-    // TODO: Implement save to gallery functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Save to Gallery functionality will be implemented soon!'),
-        backgroundColor: Colors.blue,
-      ),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(const SnackBar(content: Text('Exporting image...')));
+
+    final result = await GalleryExportService.saveScrollableToGallery(
+      context: context,
+      fileName:
+          '${widget.template.name}_${DateFormat('yyyyMMdd').format(_selectedDate)}',
+      builder: (ctx) => _buildCaptureContent(),
+      fixedHeight: 1400.0,
+      pixelRatio: 3.0,
     );
+
+    scaffold.hideCurrentSnackBar();
+    if (!mounted) return;
+
+    if (result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved to gallery successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: ${result.error}')),
+      );
+    }
   }
 
   void _shareTemplate() async {
-    // TODO: Implement share template functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Share Template functionality will be implemented soon!'),
-        backgroundColor: Colors.blue,
-      ),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      const SnackBar(content: Text('Preparing to share...')),
     );
+
+    try {
+      // Create a local file for sharing (not saved to gallery)
+      final result = await GalleryExportService.captureToLocalFile(
+        context: context,
+        fileName:
+            'share_${widget.template.name}_${DateTime.now().millisecondsSinceEpoch}',
+        builder: (ctx) => _buildCaptureContent(),
+        isScrollable: true,
+        fixedHeight: 1400.0,
+        pixelRatio: 3.0,
+      );
+
+      scaffold.hideCurrentSnackBar();
+      if (!mounted) return;
+
+      if (result.success && result.filePath != null) {
+        await Share.shareXFiles(
+          [XFile(result.filePath!)],
+          text:
+              'Check out my ${widget.template.name} for ${DateFormat('MMM dd, yyyy').format(_selectedDate)}',
+        );
+
+        // Clean up the file after sharing
+        Future.delayed(const Duration(seconds: 5), () async {
+          try {
+            final file = File(result.filePath!);
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to prepare share: ${result.error}')),
+        );
+      }
+    } catch (e) {
+      scaffold.hideCurrentSnackBar();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Share failed: $e')));
+      }
+    }
   }
 
   Future<void> _saveTemplate() async {
@@ -750,5 +814,123 @@ class _DailyTemplateScreenState extends State<DailyTemplateScreen> {
         ).showSnackBar(SnackBar(content: Text('Error saving template: $e')));
       }
     }
+  }
+
+  Widget _buildCaptureContent() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            widget.template.colors.first.withValues(alpha: 0.1),
+            widget.template.colors.last.withValues(alpha: 0.1),
+          ],
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDateSection(),
+          const SizedBox(height: 8),
+          _buildWeatherSection(),
+          const SizedBox(height: 8),
+          _buildPrioritiesSection(),
+          const SizedBox(height: 8),
+          _buildFinanceSection(),
+          const SizedBox(height: 8),
+          _buildWaterTrackerSection(),
+          const SizedBox(height: 8),
+          _buildScheduleSectionForCapture(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleSectionForCapture() {
+    return GlassCard(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: widget.template.colors),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.schedule, color: Colors.white, size: 16),
+                const SizedBox(width: 6),
+                const Expanded(
+                  child: Text(
+                    'Plans & Schedule',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              children: _timeSlots.map((time) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        child: Text(
+                          time,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _scheduleControllers[time]?.text.isEmpty == true
+                                ? 'Task...'
+                                : _scheduleControllers[time]?.text ?? 'Task...',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color:
+                                  _scheduleControllers[time]?.text.isEmpty ==
+                                      true
+                                  ? Colors.grey[500]
+                                  : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

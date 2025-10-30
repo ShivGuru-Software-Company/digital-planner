@@ -37,8 +37,9 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
             
-            // Enable proguard for release builds to ensure notifications work
-            isMinifyEnabled = true
+            // Temporarily disable minification to fix build issues
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

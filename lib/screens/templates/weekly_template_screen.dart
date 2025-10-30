@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
@@ -5,6 +6,8 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
+import '../../services/gallery_export_service.dart';
+import 'package:share_plus/share_plus.dart';
 
 class WeeklyTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -347,26 +350,85 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
   }
 
   void _saveToGallery() async {
-    // TODO: Implement save to gallery functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Save to Gallery functionality will be implemented soon!'),
-        backgroundColor: Colors.blue,
-      ),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(const SnackBar(content: Text('Exporting image...')));
+
+    final result = await GalleryExportService.saveScrollableToGallery(
+      context: context,
+      fileName:
+          '${widget.template.name}_${DateFormat('yyyyMMdd').format(_weekStartDate)}',
+      builder: (ctx) => _buildCaptureContent(),
+      fixedHeight: 1000.0,
+      pixelRatio: 3.0,
     );
+
+    scaffold.hideCurrentSnackBar();
+    if (!mounted) return;
+
+    if (result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved to gallery successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: ${result.error}')),
+      );
+    }
   }
 
   void _shareTemplate() async {
-    // TODO: Implement share template functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Share Template functionality will be implemented soon!'),
-        backgroundColor: Colors.blue,
-      ),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      const SnackBar(content: Text('Preparing to share...')),
     );
+
+    try {
+      // Create a local file for sharing (not saved to gallery)
+      final result = await GalleryExportService.captureToLocalFile(
+        context: context,
+        fileName:
+            'share_${widget.template.name}_${DateTime.now().millisecondsSinceEpoch}',
+        builder: (ctx) => _buildCaptureContent(),
+        isScrollable: true,
+        fixedHeight: 1000.0,
+        pixelRatio: 3.0,
+      );
+
+      scaffold.hideCurrentSnackBar();
+      if (!mounted) return;
+
+      if (result.success && result.filePath != null) {
+        await Share.shareXFiles(
+          [XFile(result.filePath!)],
+          text:
+              'Check out my ${widget.template.name} for ${DateFormat('MMM dd, yyyy').format(_weekStartDate)}',
+        );
+
+        // Clean up the file after sharing
+        Future.delayed(const Duration(seconds: 5), () async {
+          try {
+            final file = File(result.filePath!);
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to prepare share: ${result.error}')),
+        );
+      }
+    } catch (e) {
+      scaffold.hideCurrentSnackBar();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Share failed: $e')));
+      }
+    }
   }
-
-
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name
@@ -464,5 +526,180 @@ class _WeeklyTemplateScreenState extends State<WeeklyTemplateScreen> {
         ).showSnackBar(SnackBar(content: Text('Error saving template: $e')));
       }
     }
+  }
+
+  Widget _buildCaptureContent() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            widget.template.colors.first.withValues(alpha: 0.1),
+            widget.template.colors.last.withValues(alpha: 0.1),
+          ],
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildWeekHeader(),
+          const SizedBox(height: 16),
+          _buildWeekGridForCapture(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeekGridForCapture() {
+    return Column(
+      children: [
+        // First row
+        Row(
+          children: [
+            Expanded(child: _buildDayCardForCapture(_weekDays[0], 0)),
+            const SizedBox(width: 6),
+            Expanded(child: _buildDayCardForCapture(_weekDays[1], 1)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Second row
+        Row(
+          children: [
+            Expanded(child: _buildDayCardForCapture(_weekDays[2], 2)),
+            const SizedBox(width: 6),
+            Expanded(child: _buildDayCardForCapture(_weekDays[3], 3)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Third row
+        Row(
+          children: [
+            Expanded(child: _buildDayCardForCapture(_weekDays[4], 4)),
+            const SizedBox(width: 6),
+            Expanded(child: _buildDayCardForCapture(_weekDays[5], 5)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Fourth row - Sunday centered
+        Row(
+          children: [
+            Expanded(flex: 1, child: Container()),
+            Expanded(flex: 2, child: _buildDayCardForCapture(_weekDays[6], 6)),
+            Expanded(flex: 1, child: Container()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDayCardForCapture(String day, int index) {
+    final dayDate = _weekStartDate.add(Duration(days: index));
+
+    return GlassCard(
+      child: Container(
+        height: 180,
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: widget.template.colors),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    day.substring(0, 3),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    DateFormat('dd').format(dayDate),
+                    style: const TextStyle(color: Colors.white, fontSize: 8),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: Column(
+                children: List.generate(4, (taskIndex) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Row(
+                      children: [
+                        Transform.scale(
+                          scale: 0.7,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _dayCheckboxes[day]![taskIndex]
+                                    ? widget.template.colors.first
+                                    : Colors.grey,
+                                width: 1.5,
+                              ),
+                              color: _dayCheckboxes[day]![taskIndex]
+                                  ? widget.template.colors.first
+                                  : Colors.transparent,
+                            ),
+                            child: _dayCheckboxes[day]![taskIndex]
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 8,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _dayControllers[day]![taskIndex].text.isEmpty
+                                  ? 'Task ${taskIndex + 1}'
+                                  : _dayControllers[day]![taskIndex].text,
+                              style: TextStyle(
+                                fontSize: 8,
+                                color:
+                                    _dayControllers[day]![taskIndex]
+                                        .text
+                                        .isEmpty
+                                    ? Colors.grey[500]
+                                    : Colors.black87,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

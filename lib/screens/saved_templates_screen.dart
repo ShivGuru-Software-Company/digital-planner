@@ -11,7 +11,6 @@ import 'templates/meal_template_screen.dart';
 import 'templates/mood_template_screen.dart';
 import '../models/template_model.dart';
 
-
 class SavedTemplatesScreen extends StatefulWidget {
   const SavedTemplatesScreen({super.key});
 
@@ -324,37 +323,37 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleMenuAction(value, template),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 16),
-                          SizedBox(width: 8),
-                          Text('Edit'),
-                        ],
-                      ),
-                    ),
+                    // const PopupMenuItem(
+                    //   value: 'edit',
+                    //   child: Row(
+                    //     children: [
+                    //       Icon(Icons.edit, size: 16),
+                    //       SizedBox(width: 8),
+                    //       Text('Edit'),
+                    //     ],
+                    //   ),
+                    // ),
 
-                    const PopupMenuItem(
-                      value: 'save_gallery',
-                      child: Row(
-                        children: [
-                          Icon(Icons.image, size: 16),
-                          SizedBox(width: 8),
-                          Text('Save to Gallery'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'share',
-                      child: Row(
-                        children: [
-                          Icon(Icons.share, size: 16),
-                          SizedBox(width: 8),
-                          Text('Share'),
-                        ],
-                      ),
-                    ),
+                    // const PopupMenuItem(
+                    //   value: 'save_gallery',
+                    //   child: Row(
+                    //     children: [
+                    //       Icon(Icons.image, size: 16),
+                    //       SizedBox(width: 8),
+                    //       Text('Save to Gallery'),
+                    //     ],
+                    //   ),
+                    // ),
+                    // const PopupMenuItem(
+                    //   value: 'share',
+                    //   child: Row(
+                    //     children: [
+                    //       Icon(Icons.share, size: 16),
+                    //       SizedBox(width: 8),
+                    //       Text('Share'),
+                    //     ],
+                    //   ),
+                    // ),
                     const PopupMenuItem(
                       value: 'delete',
                       child: Row(
@@ -509,7 +508,9 @@ class _SavedTemplatesScreenState extends State<SavedTemplatesScreen> {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Save to Gallery functionality will be implemented soon!'),
+            content: Text(
+              'Save to Gallery functionality will be implemented soon!',
+            ),
             duration: Duration(seconds: 5),
             backgroundColor: Colors.deepPurple,
           ),

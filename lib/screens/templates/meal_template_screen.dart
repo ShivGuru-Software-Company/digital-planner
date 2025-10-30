@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/template_model.dart';
@@ -5,7 +6,8 @@ import '../../models/saved_template_model.dart';
 import '../../database/database_helper.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/save_template_dialog.dart';
-
+import '../../services/gallery_export_service.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MealTemplateScreen extends StatefulWidget {
   final PlannerTemplate template;
@@ -688,26 +690,85 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
   }
 
   void _saveToGallery() async {
-    // TODO: Implement save to gallery functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Save to Gallery functionality will be implemented soon!'),
-        backgroundColor: Colors.blue,
-      ),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(const SnackBar(content: Text('Exporting image...')));
+
+    final result = await GalleryExportService.saveScrollableToGallery(
+      context: context,
+      fileName:
+          '${widget.template.name}_${DateFormat('yyyyMMdd').format(_selectedDate)}',
+      builder: (ctx) => _buildCaptureContent(),
+      fixedHeight: 1200.0,
+      pixelRatio: 3.0,
     );
+
+    scaffold.hideCurrentSnackBar();
+    if (!mounted) return;
+
+    if (result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved to gallery successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: ${result.error}')),
+      );
+    }
   }
 
   void _shareMealPlan() async {
-    // TODO: Implement share template functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Share Template functionality will be implemented soon!'),
-        backgroundColor: Colors.blue,
-      ),
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      const SnackBar(content: Text('Preparing to share...')),
     );
+
+    try {
+      // Create a local file for sharing (not saved to gallery)
+      final result = await GalleryExportService.captureToLocalFile(
+        context: context,
+        fileName:
+            'share_${widget.template.name}_${DateTime.now().millisecondsSinceEpoch}',
+        builder: (ctx) => _buildCaptureContent(),
+        isScrollable: true,
+        fixedHeight: 1200.0,
+        pixelRatio: 3.0,
+      );
+
+      scaffold.hideCurrentSnackBar();
+      if (!mounted) return;
+
+      if (result.success && result.filePath != null) {
+        await Share.shareXFiles(
+          [XFile(result.filePath!)],
+          text:
+              'Check out my ${widget.template.name} for ${DateFormat('MMM dd, yyyy').format(_selectedDate)}',
+        );
+
+        // Clean up the file after sharing
+        Future.delayed(const Duration(seconds: 5), () async {
+          try {
+            final file = File(result.filePath!);
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to prepare share: ${result.error}')),
+        );
+      }
+    } catch (e) {
+      scaffold.hideCurrentSnackBar();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Share failed: $e')));
+      }
+    }
   }
-
-
 
   Future<void> _saveTemplate() async {
     // Show save dialog to get custom name
@@ -805,5 +866,40 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
         ).showSnackBar(SnackBar(content: Text('Error saving template: $e')));
       }
     }
+  }
+
+  Widget _buildCaptureContent() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            widget.template.colors.first.withValues(alpha: 0.1),
+            widget.template.colors.last.withValues(alpha: 0.1),
+          ],
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDateSection(),
+          const SizedBox(height: 8),
+          _buildNutritionOverview(),
+          const SizedBox(height: 8),
+          _buildWaterTracker(),
+          const SizedBox(height: 8),
+          ..._mealTypes.map(
+            (mealType) => Column(
+              children: [
+                _buildMealSection(mealType),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
 
 class GallerySaveResult {
   final bool success;
@@ -14,7 +16,7 @@ class GallerySaveResult {
 }
 
 class GalleryExportService {
-  /// Final, most reliable method for capturing widgets
+  /// Captures a widget and saves it to gallery
   static Future<GallerySaveResult> saveToGallery({
     required BuildContext context,
     required WidgetBuilder builder,
@@ -24,93 +26,31 @@ class GalleryExportService {
     String? fileName,
   }) async {
     try {
-      final mq = MediaQuery.of(context);
-      final width = logicalWidth ?? mq.size.width;
-
-      // Create a simple GlobalKey for RepaintBoundary
-      final GlobalKey repaintKey = GlobalKey();
-
-      // Create the widget to capture
-      final captureWidget = RepaintBoundary(
-        key: repaintKey,
-        child: Container(
-          width: width,
-          color: backgroundColor,
-          child: Material(
-            color: Colors.transparent,
-            child: MediaQuery(
-              data: mq.copyWith(textScaler: const TextScaler.linear(1.0)),
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: builder(context),
-              ),
-            ),
-          ),
-        ),
+      // First capture to local file
+      final localResult = await _captureToLocalFile(
+        context: context,
+        builder: builder,
+        logicalWidth: logicalWidth,
+        pixelRatio: pixelRatio,
+        backgroundColor: backgroundColor,
+        fileName: fileName,
+        isScrollable: false,
       );
 
-      // Show in a temporary overlay positioned far off-screen
-      final overlayState = Overlay.of(context);
-      late OverlayEntry entry;
-
-      entry = OverlayEntry(
-        builder: (context) => Positioned(
-          left: -5000, // Far off-screen
-          top: -5000,
-          child: captureWidget,
-        ),
-      );
-
-      overlayState.insert(entry);
-
-      // Wait for the widget to be fully built and rendered
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Wait for multiple frame cycles to ensure complete rendering
-      for (int i = 0; i < 8; i++) {
-        await WidgetsBinding.instance.endOfFrame;
-        await Future.delayed(const Duration(milliseconds: 16));
+      if (!localResult.success || localResult.filePath == null) {
+        return localResult;
       }
 
-      // Additional wait to ensure everything is settled
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Then save to gallery
+      final file = File(localResult.filePath!);
+      final bytes = await file.readAsBytes();
 
-      // Get the render object
-      final renderObject = repaintKey.currentContext?.findRenderObject();
-
-      if (renderObject is! RenderRepaintBoundary) {
-        entry.remove();
-        return const GallerySaveResult(
-          success: false,
-          error: 'Could not find RepaintBoundary render object',
-        );
-      }
-
-      // Capture the image - no paint checks, just capture
-      final ui.Image image = await renderObject.toImage(pixelRatio: pixelRatio);
-
-      // Remove the overlay immediately after capture
-      entry.remove();
-
-      // Convert to PNG bytes
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-
-      if (byteData == null) {
-        return const GallerySaveResult(
-          success: false,
-          error: 'Failed to convert image to PNG bytes',
-        );
-      }
-
-      final Uint8List pngBytes = byteData.buffer.asUint8List();
-
-      // Save to gallery
       final name =
           fileName ??
           'digital_planner_${DateTime.now().millisecondsSinceEpoch}.png';
-      await Gal.putImageBytes(pngBytes, name: name);
+      await Gal.putImageBytes(bytes, name: name);
 
-      return GallerySaveResult(success: true, filePath: name);
+      return GallerySaveResult(success: true, filePath: localResult.filePath);
     } catch (e) {
       return GallerySaveResult(
         success: false,
@@ -119,7 +59,7 @@ class GalleryExportService {
     }
   }
 
-  /// Method for scrollable content with fixed height
+  /// Captures scrollable content and saves it to gallery
   static Future<GallerySaveResult> saveScrollableToGallery({
     required BuildContext context,
     required WidgetBuilder builder,
@@ -130,33 +70,124 @@ class GalleryExportService {
     String? fileName,
   }) async {
     try {
+      // First capture to local file
+      final localResult = await _captureToLocalFile(
+        context: context,
+        builder: builder,
+        logicalWidth: logicalWidth,
+        pixelRatio: pixelRatio,
+        backgroundColor: backgroundColor,
+        fileName: fileName,
+        isScrollable: true,
+        fixedHeight: fixedHeight,
+      );
+
+      if (!localResult.success || localResult.filePath == null) {
+        return localResult;
+      }
+
+      // Then save to gallery
+      final file = File(localResult.filePath!);
+      final bytes = await file.readAsBytes();
+
+      final name =
+          fileName ??
+          'digital_planner_${DateTime.now().millisecondsSinceEpoch}.png';
+      await Gal.putImageBytes(bytes, name: name);
+
+      return GallerySaveResult(success: true, filePath: localResult.filePath);
+    } catch (e) {
+      return GallerySaveResult(
+        success: false,
+        error: 'Capture failed: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Captures a widget to local file only (for sharing)
+  static Future<GallerySaveResult> captureToLocalFile({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    double? logicalWidth,
+    double? fixedHeight,
+    double pixelRatio = 3.0,
+    Color backgroundColor = Colors.white,
+    String? fileName,
+    bool isScrollable = false,
+  }) async {
+    return await _captureToLocalFile(
+      context: context,
+      builder: builder,
+      logicalWidth: logicalWidth,
+      pixelRatio: pixelRatio,
+      backgroundColor: backgroundColor,
+      fileName: fileName,
+      isScrollable: isScrollable,
+      fixedHeight: fixedHeight,
+    );
+  }
+
+  /// Internal method to capture widget to local file
+  static Future<GallerySaveResult> _captureToLocalFile({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    double? logicalWidth,
+    double pixelRatio = 3.0,
+    Color backgroundColor = Colors.white,
+    String? fileName,
+    bool isScrollable = false,
+    double? fixedHeight,
+  }) async {
+    try {
       final mq = MediaQuery.of(context);
       final width = logicalWidth ?? mq.size.width;
-      final height = fixedHeight ?? 800.0; // Reasonable default height
 
       final GlobalKey repaintKey = GlobalKey();
 
-      final captureWidget = RepaintBoundary(
-        key: repaintKey,
-        child: Container(
-          width: width,
-          height: height,
-          color: backgroundColor,
-          child: Material(
-            color: Colors.transparent,
-            child: MediaQuery(
-              data: mq.copyWith(textScaler: const TextScaler.linear(1.0)),
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
+      Widget captureWidget;
+
+      if (isScrollable) {
+        final height = fixedHeight ?? 800.0;
+        captureWidget = RepaintBoundary(
+          key: repaintKey,
+          child: Container(
+            width: width,
+            height: height,
+            color: backgroundColor,
+            child: Material(
+              color: Colors.transparent,
+              child: MediaQuery(
+                data: mq.copyWith(textScaler: const TextScaler.linear(1.0)),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: builder(context),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      } else {
+        captureWidget = RepaintBoundary(
+          key: repaintKey,
+          child: Container(
+            width: width,
+            color: backgroundColor,
+            child: Material(
+              color: Colors.transparent,
+              child: MediaQuery(
+                data: mq.copyWith(textScaler: const TextScaler.linear(1.0)),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
                   child: builder(context),
                 ),
               ),
             ),
           ),
-        ),
-      );
+        );
+      }
 
       final overlayState = Overlay.of(context);
       late OverlayEntry entry;
@@ -168,15 +199,15 @@ class GalleryExportService {
 
       overlayState.insert(entry);
 
-      // Wait longer for scrollable content
-      await Future.delayed(const Duration(milliseconds: 400));
+      // Wait for rendering
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 8; i++) {
         await WidgetsBinding.instance.endOfFrame;
-        await Future.delayed(const Duration(milliseconds: 20));
+        await Future.delayed(const Duration(milliseconds: 16));
       }
 
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 200));
 
       final renderObject = repaintKey.currentContext?.findRenderObject();
 
@@ -201,12 +232,17 @@ class GalleryExportService {
       }
 
       final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+      // Save to local file
+      final directory = await getApplicationDocumentsDirectory();
       final name =
           fileName ??
-          'digital_planner_${DateTime.now().millisecondsSinceEpoch}.png';
-      await Gal.putImageBytes(pngBytes, name: name);
+          'digital_planner_${DateTime.now().millisecondsSinceEpoch}';
+      final file = File('${directory.path}/$name.png');
 
-      return GallerySaveResult(success: true, filePath: name);
+      await file.writeAsBytes(pngBytes);
+
+      return GallerySaveResult(success: true, filePath: file.path);
     } catch (e) {
       return GallerySaveResult(
         success: false,
@@ -222,7 +258,6 @@ class GalleryExportService {
     String? fileName,
   }) async {
     try {
-      // Wait a moment to ensure the widget is fully rendered
       await Future.delayed(const Duration(milliseconds: 300));
 
       final renderObject = repaintBoundaryKey.currentContext
@@ -235,7 +270,6 @@ class GalleryExportService {
         );
       }
 
-      // Capture without any paint checks
       final ui.Image image = await renderObject.toImage(pixelRatio: pixelRatio);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
@@ -247,13 +281,20 @@ class GalleryExportService {
       }
 
       final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+      // Save to local file first
+      final directory = await getApplicationDocumentsDirectory();
       final name =
           fileName ??
-          'digital_planner_${DateTime.now().millisecondsSinceEpoch}.png';
+          'digital_planner_${DateTime.now().millisecondsSinceEpoch}';
+      final file = File('${directory.path}/$name.png');
 
-      await Gal.putImageBytes(pngBytes, name: name);
+      await file.writeAsBytes(pngBytes);
 
-      return GallerySaveResult(success: true, filePath: name);
+      // Then save to gallery
+      await Gal.putImageBytes(pngBytes, name: '$name.png');
+
+      return GallerySaveResult(success: true, filePath: file.path);
     } catch (e) {
       return GallerySaveResult(success: false, error: e.toString());
     }

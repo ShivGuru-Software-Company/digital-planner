@@ -559,88 +559,16 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
   }
 
   void _showIngredientsDialog(String mealType) {
-    final ingredients = List<String>.from(_ingredientsData[mealType] ?? []);
-    final controller = TextEditingController();
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          '$mealType Ingredients',
-          style: const TextStyle(fontSize: 14),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 200,
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: controller,
-                      decoration: const InputDecoration(
-                        hintText: 'Add ingredient...',
-                        hintStyle: TextStyle(fontSize: 11),
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.all(8),
-                        isDense: true,
-                      ),
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      if (controller.text.isNotEmpty) {
-                        setState(() {
-                          ingredients.add(controller.text);
-                          controller.clear();
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.add, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: ingredients.length,
-                  itemBuilder: (context, index) => ListTile(
-                    dense: true,
-                    title: Text(
-                      ingredients[index],
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                    trailing: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          ingredients.removeAt(index);
-                        });
-                      },
-                      icon: const Icon(Icons.delete, size: 16),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(fontSize: 11)),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _ingredientsData[mealType] = ingredients;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Save', style: TextStyle(fontSize: 11)),
-          ),
-        ],
+      builder: (context) => _IngredientsDialog(
+        mealType: mealType,
+        initialIngredients: List<String>.from(_ingredientsData[mealType] ?? []),
+        onSave: (ingredients) {
+          setState(() {
+            _ingredientsData[mealType] = ingredients;
+          });
+        },
       ),
     );
   }
@@ -900,6 +828,154 @@ class _MealTemplateScreenState extends State<MealTemplateScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _IngredientsDialog extends StatefulWidget {
+  final String mealType;
+  final List<String> initialIngredients;
+  final Function(List<String>) onSave;
+
+  const _IngredientsDialog({
+    required this.mealType,
+    required this.initialIngredients,
+    required this.onSave,
+  });
+
+  @override
+  State<_IngredientsDialog> createState() => _IngredientsDialogState();
+}
+
+class _IngredientsDialogState extends State<_IngredientsDialog> {
+  late List<String> _tempIngredients;
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _tempIngredients = List<String>.from(widget.initialIngredients);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _addIngredient() {
+    if (_controller.text.trim().isNotEmpty) {
+      setState(() {
+        _tempIngredients.add(_controller.text.trim());
+        _controller.clear();
+      });
+    }
+  }
+
+  void _removeIngredient(int index) {
+    setState(() {
+      _tempIngredients.removeAt(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        '${widget.mealType} Ingredients',
+        style: const TextStyle(fontSize: 14),
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 300,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Add ingredient...',
+                      hintStyle: TextStyle(fontSize: 11),
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.all(8),
+                      isDense: true,
+                    ),
+                    style: const TextStyle(fontSize: 11),
+                    onSubmitted: (_) => _addIngredient(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _addIngredient,
+                  icon: const Icon(Icons.add, size: 20),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.green.withValues(alpha: 0.1),
+                    foregroundColor: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_tempIngredients.isEmpty)
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'No ingredients added yet.\nAdd some ingredients above!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _tempIngredients.length,
+                  itemBuilder: (context, index) => Card(
+                    margin: const EdgeInsets.only(bottom: 4),
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      title: Text(
+                        _tempIngredients[index],
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      trailing: IconButton(
+                        onPressed: () => _removeIngredient(index),
+                        icon: const Icon(Icons.delete, size: 16),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.red.withValues(alpha: 0.1),
+                          foregroundColor: Colors.red,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            widget.onSave(_tempIngredients);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Save', style: TextStyle(fontSize: 11)),
+        ),
+      ],
     );
   }
 }

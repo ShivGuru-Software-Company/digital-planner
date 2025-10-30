@@ -213,7 +213,7 @@ class TemplateModel {
         title: sectionMap['title'],
         description: sectionMap['description'],
         icon: sectionMap['iconCodePoint'] != null
-            ? IconData(sectionMap['iconCodePoint'], fontFamily: 'MaterialIcons')
+            ? _createIconData(sectionMap['iconCodePoint'])
             : null,
         fields: fields,
       );
@@ -224,10 +224,48 @@ class TemplateModel {
       name: map['name'],
       description: map['description'],
       category: map['category'],
-      icon: IconData(map['iconCodePoint'], fontFamily: 'MaterialIcons'),
+      icon: _createIconData(map['iconCodePoint']),
       colors: colors,
       sections: sections,
       customData: map['customData'] != null ? {} : null,
     );
+  }
+
+  static IconData _createIconData(int codePoint) {
+    // Map common icon codePoints to const Icons
+    switch (codePoint) {
+      case 58135:
+        return Icons.today; // 0xe2e7
+      case 59679:
+        return Icons.view_week; // 0xe8df
+      case 59681:
+        return Icons.calendar_month; // 0xe8e1
+      case 59558:
+        return Icons.calendar_today; // 0xe8a6
+      case 58732:
+        return Icons.restaurant; // 0xe56c
+      case 59378:
+        return Icons.sentiment_satisfied_alt; // 0xe7f2
+      case 58894:
+        return Icons.school; // 0xe80e
+      case 59573:
+        return Icons.schedule; // 0xe8b5
+      case 57531:
+        return Icons.book; // 0xe0bb
+      case 59683:
+        return Icons.trending_up; // 0xe8e3
+      case 57559:
+        return Icons.free_breakfast; // 0xe0d7
+      case 58340:
+        return Icons.lunch_dining; // 0xe3e4
+      case 58137:
+        return Icons.dinner_dining; // 0xe319
+      case 59557:
+        return Icons.calendar_view_week; // 0xe8a5
+      case 59574:
+        return Icons.psychology; // 0xe8b6
+      default:
+        return Icons.today; // Default fallback
+    }
   }
 }

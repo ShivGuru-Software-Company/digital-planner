@@ -303,10 +303,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: isCompleted
-                            ? Colors.green.withOpacity(0.1)
+                            ? Colors.green.withValues(alpha:0.1)
                             : isOverdue
-                            ? Colors.red.withOpacity(0.1)
-                            : const Color(0xFF6366F1).withOpacity(0.1),
+                            ? Colors.red.withValues(alpha:0.1)
+                            : const Color(0xFF6366F1).withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -360,7 +360,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
+                                    color: Colors.red.withValues(alpha:0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
@@ -381,7 +381,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
+                                    color: Colors.green.withValues(alpha:0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
@@ -498,8 +498,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _createAlarm(NotificationModel notification) async {
     try {
-      print('Creating notification: ${notification.title}');
-      print('Scheduled for: ${notification.scheduledDateTime}');
+      debugPrint('Creating notification: ${notification.title}');
+      debugPrint('Scheduled for: ${notification.scheduledDateTime}');
 
       final alarmProvider = Provider.of<AlarmProvider>(context, listen: false);
 
@@ -518,7 +518,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         );
       }
     } catch (e) {
-      print('Error in _createAlarm: $e');
+      debugPrint('Error in _createAlarm: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

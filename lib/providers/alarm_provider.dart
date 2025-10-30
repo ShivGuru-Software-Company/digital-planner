@@ -37,7 +37,6 @@ class AlarmProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _databaseHelper.checkDatabaseStructure();
       _alarms = await _databaseHelper.getAllNotifications();
       debugPrint('Loaded ${_alarms.length} alarms');
     } catch (e) {

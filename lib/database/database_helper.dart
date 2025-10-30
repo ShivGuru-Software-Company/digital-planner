@@ -57,10 +57,7 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    print('Upgrading database from version $oldVersion to $newVersion');
-
     if (oldVersion < 2) {
-      // Create notifications table if it doesn't exist
       await db.execute('''
         CREATE TABLE IF NOT EXISTS notifications(
           id TEXT PRIMARY KEY,
@@ -84,9 +81,6 @@ class DatabaseHelper {
 
         if (!columns.contains('created_at') ||
             !columns.contains('updated_at')) {
-          print('Notifications table missing columns, recreating...');
-
-          // Drop and recreate the table with correct structure
           await db.execute('DROP TABLE IF EXISTS notifications');
           await db.execute('''
             CREATE TABLE notifications(
@@ -102,8 +96,6 @@ class DatabaseHelper {
           ''');
         }
       } catch (e) {
-        print('Error checking notifications table structure: $e');
-        // If table doesn't exist, create it
         await db.execute('''
           CREATE TABLE IF NOT EXISTS notifications(
             id TEXT PRIMARY KEY,
@@ -190,7 +182,6 @@ class DatabaseHelper {
     try {
       final db = await database;
       final map = notification.toMap();
-      print('Inserting notification with data: $map');
 
       await db.insert(
         'notifications',
@@ -198,11 +189,8 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
-      print('Notification inserted successfully with ID: ${notification.id}');
       return notification.id;
-    } catch (e, stackTrace) {
-      print('Error inserting notification: $e');
-      print('Stack trace: $stackTrace');
+    } catch (e) {
       rethrow;
     }
   }
@@ -294,20 +282,4 @@ class DatabaseHelper {
     );
   }
 
-  // Method to check database structure
-  Future<void> checkDatabaseStructure() async {
-    final db = await database;
-
-    try {
-      final notificationsInfo = await db.rawQuery(
-        "PRAGMA table_info(notifications)",
-      );
-      print('Notifications table structure:');
-      for (final column in notificationsInfo) {
-        print('  ${column['name']}: ${column['type']}');
-      }
-    } catch (e) {
-      print('Error checking database structure: $e');
-    }
-  }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -50,7 +51,7 @@ class NotificationService {
       );
 
       await androidPlugin.createNotificationChannel(channel);
-      print('Notification channel created for release mode');
+      debugPrint('Notification channel created for release mode');
     }
   }
 
@@ -115,25 +116,21 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
 
-      print('Notification scheduled: $title at $scheduledDate');
+      debugPrint('Notification scheduled: $title at $scheduledDate');
     } catch (e) {
-      print('Error scheduling notification: $e');
+      debugPrint('Error scheduling notification: $e');
       rethrow;
     }
   }
 
-  /// Cancel a specific notification
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);
-    print('Notification cancelled: $id');
   }
 
-  /// Cancel all notifications
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
   }
 
-  /// Get pending notifications for debugging
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
   }

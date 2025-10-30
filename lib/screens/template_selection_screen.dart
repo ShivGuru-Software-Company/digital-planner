@@ -60,37 +60,6 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: TextField(
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
-          },
-          decoration: const InputDecoration(
-            hintText: 'Search templates...',
-            border: InputBorder.none,
-            icon: Icon(Icons.search, color: Color(0xFF6366F1)),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildFilters() {
     // Combine all filter options in one row
     final allFilters = [

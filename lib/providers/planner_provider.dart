@@ -104,11 +104,6 @@ class PlannerProvider extends ChangeNotifier {
 
   Future<void> _scheduleReminder(EntryModel entry) async {
     try {
-      print('Scheduling reminder for entry: ${entry.title}');
-      print('Reminder time: ${entry.reminderTime}');
-      print('Entry date: ${entry.date}');
-
-      // Parse reminder time (assuming format like "HH:mm" or ISO string)
       DateTime reminderDateTime;
 
       if (entry.reminderTime!.contains('T')) {
@@ -129,24 +124,16 @@ class PlannerProvider extends ChangeNotifier {
             minute,
           );
         } else {
-          print('Invalid time format: ${entry.reminderTime}');
+          debugPrint('Invalid time format: ${entry.reminderTime}');
           return; // Invalid time format
         }
       }
-
-      print('Calculated reminder datetime: $reminderDateTime');
-      print('Current time: ${DateTime.now()}');
-      print('Is in future: ${reminderDateTime.isAfter(DateTime.now())}');
-
-      // Only schedule if the reminder time is in the future
       if (reminderDateTime.isAfter(DateTime.now())) {
-        print('Reminder scheduled successfully');
+        debugPrint('Reminder scheduled successfully');
       } else {
-        print('Reminder time is in the past, not scheduling');
+        debugPrint('Reminder time is in the past, not scheduling');
       }
     } catch (e) {
-      // Handle parsing errors gracefully
-      print('Error scheduling reminder for entry ${entry.id}: $e');
       debugPrint('Error scheduling reminder for entry ${entry.id}: $e');
     }
   }
